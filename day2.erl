@@ -1,8 +1,7 @@
 -module(day2).
 -compile(export_all).
 
-main(Args) ->
-    Filename = lists:nth(1, Args),
+main([Filename]) ->
     io:format("Checksum: ~B\n", [checksum_lines(file:open(Filename, [read]))]),
     {Prefix, Suffix} = search_lines(file:open(Filename, [read])),
     io:format("Crates: ~s~s\n", [Prefix, Suffix]),
