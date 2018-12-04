@@ -4,6 +4,8 @@
 main(Args) ->
     Filename = lists:nth(1, Args),
     io:format("Checksum: ~B\n", [checksum_lines(file:open(Filename, [read]))]),
+    {Prefix, Suffix} = search_lines(file:open(Filename, [read])),
+    io:format("Crates: ~s~s\n", [Prefix, Suffix]),
     erlang:halt(0).
 
 %% Phase 1
@@ -37,3 +39,34 @@ checksum_lines(File, Pid) ->
                 checksum_lines(File, Pid)
     end.
 checksum_lines({ok, File}) -> checksum_lines(File, spawn(day2, checksum, [])).
+
+search1(Seen) ->
+    receive
+        {From, eof} -> From ! not_found;
+        {From, Line} ->
+            New = sets:from_list(splits(Line)),
+            Intersection = sets:intersection(Seen, New),
+            case sets:size(Intersection) of
+                0 -> search1(sets:union(Seen, New));
+                1 -> [Element] = sets:to_list(Intersection),
+                     From ! Element
+            end
+
+    end.
+search() -> search1(sets:new()).
+
+splits2(String, Pos) ->
+    case Pos < string:length(String) of
+        true -> [{string:slice(String, 0, Pos), string:slice(String, Pos + 1)}] ++ splits2(String, Pos + 1);
+        false -> []
+    end.
+splits(String) -> splits2(String, 0).
+
+search_lines(File, Pid) ->
+    case io:get_line(File, "") of
+        eof -> Pid ! {self(), eof},
+               receive Msg -> Msg
+               end;
+        Line -> Pid ! {self(), string:chomp(Line)}, search_lines(File, Pid)
+    end.
+search_lines({ok, File}) -> search_lines(File, spawn(day2, search, [])).
