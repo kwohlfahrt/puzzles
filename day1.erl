@@ -1,9 +1,9 @@
 -module(day1).
 -compile(export_all).
 
-main() ->
-    io:format("Sum: ~B\n", [sum_lines(file:open("day1.txt", [read]))]),
-    io:format("Calibration: ~B\n", [calibrate_lines(file:open("day1.txt", [read]))]),
+main([Filename]) ->
+    io:format("Sum: ~B\n", [sum_lines(file:open(Filename, [read]))]),
+    io:format("Calibration: ~B\n", [calibrate_lines(file:open(Filename, [read]))]),
     erlang:halt(0).
 
 sum_lines(File, Acc) ->
