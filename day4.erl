@@ -2,8 +2,9 @@
 -compile(export_all).
 
 main([Filename]) ->
-    [Guard, Minute] = analyze_schedule(file:open(Filename, [read])),
-    io:format("Part 1: ~B\n", [Guard * Minute]),
+    {Part1, Part2} = analyze_schedule(file:open(Filename, [read])),
+    io:format("Part 1: ~B\n", [Part1]),
+    io:format("Part 2: ~B\n", [Part2]),
     erlang:halt(0).
 
 max_with(First, Second, Fun) ->
@@ -18,7 +19,7 @@ max_with(List, Fun) ->
 guard(awake, Record) ->
     receive
         {Minute, "falls asleep"} -> guard(asleep, Minute, Record);
-        {readout, Id, Pid} ->
+        {readout1, Id, Pid} ->
             MinutesAsleep = orddict:fold(fun (_, Value, Acc) -> Value + Acc end, 0, Record),
             MostAsleep =
                 try max_with(orddict:to_list(Record), fun ({_, Value}) -> Value end) of
@@ -26,7 +27,15 @@ guard(awake, Record) ->
                 catch
                     error:badarg -> nil
                 end,
-            Pid ! {Id, MinutesAsleep, MostAsleep}
+            Pid ! {Id, MinutesAsleep, MostAsleep},
+            guard(awake, Record);
+        {readout2, Id, Pid} ->
+            {MinuteAsleep, AmountAsleep} =
+                try max_with(orddict:to_list(Record), fun ({_, Value}) -> Value end)
+                catch
+                    error:badarg -> {nil, 0}
+                end,
+            Pid ! {Id, AmountAsleep, MinuteAsleep}
     end.
 guard(asleep, Since, Record) ->
     receive
@@ -64,8 +73,11 @@ guards(Active, Guards) ->
             end,
             guards(NewActive, NewGuards);
         {readout, Pid} ->
-            dict:map(fun (Key, Value) -> Value ! {readout, Key, self()} end, Guards),
-            Pid ! guards_recv(dict:size(Guards))
+            dict:map(fun (Key, Value) -> Value ! {readout1, Key, self()} end, Guards),
+            Part1 = guards_recv(dict:size(Guards)),
+            dict:map(fun (Key, Value) -> Value ! {readout2, Key, self()} end, Guards),
+            Part2 = guards_recv(dict:size(Guards)),
+            Pid ! [Part1, Part2]
     end.
 guards() -> guards(none, dict:new()).
 
@@ -90,4 +102,5 @@ analyze_schedule({ok, File}) ->
     Guards = spawn(?MODULE, guards, []),
     orddict:fold(fun (Key, Value, Acc) -> Guards ! {Key, Value}, Acc end, nil, Schedule),
     Guards ! {readout, self()},
-    receive {Id, _, MostAsleep} -> [Id, MostAsleep] end.
+    [Part1, Part2] = receive Msg -> lists:map(fun ({Id, _, MinuteAsleep}) -> Id * MinuteAsleep end, Msg) end,
+    {Part1, Part2}.
