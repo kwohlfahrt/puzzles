@@ -1,20 +1,13 @@
 -module(day4).
 -compile(export_all).
+-import(util, [max_with/2, max_with/3]).
 
 main([Filename]) ->
     {Part1, Part2} = analyze_schedule(file:open(Filename, [read])),
     io:format("Part 1: ~B\n", [Part1]),
     io:format("Part 2: ~B\n", [Part2]),
     erlang:halt(0).
-
-max_with(First, Second, Fun) ->
-    case Fun(First) > Fun(Second) of
-        true -> First;
-        false -> Second
-    end.
-max_with(List, Fun) ->
-    {[Head], Tail} = lists:split(1, List),
-    lists:foldl(fun (Value, Acc) -> max_with(Value, Acc, Fun) end, Head, Tail).
+main() -> main(["day4.txt"]).
 
 guard(awake, Record) ->
     receive
