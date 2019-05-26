@@ -32,9 +32,9 @@ get_checksum(Pid) ->
     receive Msg -> Msg end.
 
 checksum_lines(File, Pid) ->
-    case io:get_line(File, "") of
+    case file:read_line(File) of
         eof -> get_checksum(Pid);
-        Line -> update_checksum(Pid, Line),
+        {ok, Line} -> update_checksum(Pid, Line),
                 checksum_lines(File, Pid)
     end.
 checksum_lines({ok, File}) -> checksum_lines(File, spawn(day2, checksum, [])).
@@ -62,10 +62,10 @@ splits2(String, Pos) ->
 splits(String) -> splits2(String, 0).
 
 search_lines(File, Pid) ->
-    case io:get_line(File, "") of
+    case file:read_line(File) of
         eof -> Pid ! {self(), eof},
                receive Msg -> Msg
                end;
-        Line -> Pid ! {self(), string:chomp(Line)}, search_lines(File, Pid)
+        {ok, Line} -> Pid ! {self(), string:chomp(Line)}, search_lines(File, Pid)
     end.
 search_lines({ok, File}) -> search_lines(File, spawn(day2, search, [])).

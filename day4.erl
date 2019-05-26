@@ -90,9 +90,9 @@ parse(Line) ->
     {{Date, Hours, Minutes}, Action}.
 
 parse_schedule(File, Schedule) ->
-    case io:get_line(File, "") of
+    case file:read_line(File) of
         eof -> Schedule;
-        Line -> {Timestamp, Action} = parse(string:chomp(Line)),
+        {ok, Line} -> {Timestamp, Action} = parse(string:chomp(Line)),
                 parse_schedule(File, orddict:store(Timestamp, Action, Schedule))
     end.
 parse_schedule(File) -> parse_schedule(File, orddict:new()).

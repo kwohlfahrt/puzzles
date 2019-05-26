@@ -39,11 +39,11 @@ add_claim(Id, Origin, Size, {Cloth, Claims}) ->
     lists:foldl(Fn, {Cloth, sets:add_element(Id, Claims)}, coords(Origin, Size)).
 
 add_claims(File, Pid) ->
-    case io:get_line(File, "") of
+    case file:read_line(File) of
         eof -> Pid ! {self(), readout},
                receive Msg -> Msg
                end;
-        Line ->
+        {ok, Line} ->
             [Id, Origin, Size] = string:lexemes(string:chomp(Line), " @#:"),
             [{X, []}, {Y, []}] = lists:map(fun string:to_integer/1, string:split(Origin, ",")),
             [{W, []}, {H, []}] = lists:map(fun string:to_integer/1, string:split(Size, "x")),
