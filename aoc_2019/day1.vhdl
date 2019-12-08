@@ -108,16 +108,15 @@ begin
   process
   begin
     wait on mass;
-    reset <= true;
-    wait for 1 ms;
     reset <= false;
     item_mass <= mass;
-    wait for 1 ms;
+    wait on item_fuel;
     while item_fuel /= 0 loop
       item_mass <= item_fuel;
-      wait for 1 ms;
+      wait on item_fuel;
     end loop;
     fuel <= sub_total;
+    reset <= true;
   end process;
 end behave;
 
