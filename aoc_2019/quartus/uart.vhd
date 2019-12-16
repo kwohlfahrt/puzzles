@@ -13,7 +13,7 @@ entity uart is
 end;
 
 architecture structure of uart is
-  signal counter : natural range 0 to 4 := 4;
+  signal counter : natural range 0 to 1 := 1;
 begin
   clk_enable <= '0';
   tx <= '1';
@@ -21,14 +21,14 @@ begin
   begin
     if rising_edge(clk) then
       if counter = 0 then
-        counter <= 4;
+        counter <= 1;
       else
         counter <= counter - 1;
       end if;
 
-      if counter = 4 then
+      if counter = 1 then
         output <= "11111111";
-      elsif counter = 2 then
+      elsif counter = 0 then
         output <= "00000000";
       end if;
     end if;

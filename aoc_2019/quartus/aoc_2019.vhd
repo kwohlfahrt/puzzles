@@ -8,6 +8,7 @@ entity aoc_2019 is
 	       seven_segments : out std_logic_vector(0 to 7 * 4 - 1);
 	       leds_red : out std_logic_vector(0 to 9);
 	       leds_green : out std_logic_vector(0 to 7);
+               oscillator : in std_logic;
                uart_rx : in std_logic;
                uart_tx : out std_logic );
 end;
