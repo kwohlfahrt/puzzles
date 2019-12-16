@@ -13,19 +13,24 @@ entity uart is
 end;
 
 architecture structure of uart is
-  signal counter : natural range 0 to 4;
-  signal buf : std_logic_vector(0 to 7) := "00000000";
+  signal counter : natural range 0 to 4 := 4;
 begin
   clk_enable <= '0';
   tx <= '1';
   process (clk)
   begin
-    -- can't use rising_edge, next try with real clock
-    if clk = '0' then
-      buf <= "11111111";
-    else
-      buf <= "00000000";
+    if rising_edge(clk) then
+      if counter = 0 then
+        counter <= 4;
+      else
+        counter <= counter - 1;
+      end if;
+
+      if counter = 4 then
+        output <= "11111111";
+      elsif counter = 2 then
+        output <= "00000000";
+      end if;
     end if;
   end process;
-  output <= buf;
 end;
