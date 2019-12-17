@@ -23,14 +23,15 @@ architecture structure of uart is
   type rx_state is (start_bit, data, stop_bits);
 
   signal state : rx_state := stop_bits;
-  signal done : std_logic := '1';
   signal phase : natural range 0 to 1 := 0;
+  signal done : std_logic;
 
-  signal buf : std_logic_vector(0 to 7);
+  signal buf : std_logic_vector(output'range);
   signal idx : natural range buf'range;
 begin
   tx <= '1';
-  clk_reset <= done and rx;
+  done <=  '1' when phase = phase'left and state = start_bit else '0';
+  clk_reset <= rx and done;
 
   process (clk)
     variable samples : std_logic_vector(1 to phase'right);
@@ -40,10 +41,6 @@ begin
         phase <= phase'left;
       else
         phase <= phase + 1;
-      end if;
-
-      if phase = phase'left and state = start_bit then
-        done <= '0';
       end if;
 
       if phase /= phase'left then
@@ -57,29 +54,23 @@ begin
               state <= data;
               idx <= 0;
             else
-              done <= '1';
               state <= start_bit;
             end if;
           when data =>
+            buf(idx) <= samples(1);
+
             if idx = idx'right then
               state <= stop_bits;
             else
               idx <= idx + 1;
             end if;
           when stop_bits =>
-            done <= '1';
+            if samples(1) = '1' then
+              output <= buf;
+            end if;
             state <= start_bit;
         end case;
       end if;
     end if;
-  end process;
-
-  process (state, idx)
-  begin
-    case state is
-      when start_bit => output <= "10000000";
-      when data => output <= "01000" & std_logic_vector(to_unsigned(idx, 3));
-      when stop_bits => output <= "11000000";
-    end case;
   end process;
 end;
