@@ -27,7 +27,7 @@ begin
 	display : entity work.seven_segments_dec generic map ( n => 4 )
 		port map ( value => unsigned(full_switches), output => seven_segments );
         uart : entity work.uart
-		port map ( rx => buttons(0), tx => uart_tx,
+		port map ( rx => uart_rx, tx => uart_tx,
                            clk => uart_clk, clk_reset => uart_clk_reset,
                            input => "00000000", output => leds_green(0 to 7) );
 end;

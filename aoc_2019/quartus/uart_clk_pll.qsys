@@ -6,10 +6,10 @@
    version="1.0"
    description=""
    tags=""
-   categories="" />
+   categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
-   element pll_0
+   element pll
    {
       datum _sortIndex
       {
@@ -31,17 +31,17 @@
  <parameter name="hideFromIPCatalog" value="false" />
  <parameter name="lockedInterfaceDefinition" value="" />
  <parameter name="maxAdditionalLatency" value="1" />
- <parameter name="projectName" value="" />
+ <parameter name="projectName" value="aoc_2019.qpf" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="0" />
  <parameter name="testBenchDutName" value="" />
  <parameter name="timeStamp" value="0" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
- <interface name="outclk" internal="pll_0.outclk3" type="clock" dir="start" />
- <interface name="refclk" internal="pll_0.refclk" type="clock" dir="end" />
- <interface name="reset" internal="pll_0.reset" type="reset" dir="end" />
- <module name="pll_0" kind="altera_pll" version="19.1" enabled="1">
+ <interface name="outclk" internal="pll.outclk1" type="clock" dir="start" />
+ <interface name="refclk" internal="pll.refclk" type="clock" dir="end" />
+ <interface name="reset" internal="pll.reset" type="reset" dir="end" />
+ <module name="pll" kind="altera_pll" version="19.1" enabled="1">
   <parameter name="debug_print_output" value="false" />
   <parameter name="debug_use_rbc_taf_method" value="false" />
   <parameter name="device" value="5CGXFC5C6F27C7" />
@@ -84,7 +84,7 @@
   <parameter name="gui_actual_phase_shift8" value="0" />
   <parameter name="gui_actual_phase_shift9" value="0" />
   <parameter name="gui_cascade_counter0" value="true" />
-  <parameter name="gui_cascade_counter1" value="true" />
+  <parameter name="gui_cascade_counter1" value="false" />
   <parameter name="gui_cascade_counter10" value="false" />
   <parameter name="gui_cascade_counter11" value="false" />
   <parameter name="gui_cascade_counter12" value="false" />
@@ -93,7 +93,7 @@
   <parameter name="gui_cascade_counter15" value="false" />
   <parameter name="gui_cascade_counter16" value="false" />
   <parameter name="gui_cascade_counter17" value="false" />
-  <parameter name="gui_cascade_counter2" value="true" />
+  <parameter name="gui_cascade_counter2" value="false" />
   <parameter name="gui_cascade_counter3" value="false" />
   <parameter name="gui_cascade_counter4" value="false" />
   <parameter name="gui_cascade_counter5" value="false" />
@@ -105,8 +105,8 @@
   <parameter name="gui_channel_spacing" value="0.0" />
   <parameter name="gui_clk_bad" value="false" />
   <parameter name="gui_device_speed_grade" value="1" />
-  <parameter name="gui_divide_factor_c0" value="200" />
-  <parameter name="gui_divide_factor_c1" value="200" />
+  <parameter name="gui_divide_factor_c0" value="125" />
+  <parameter name="gui_divide_factor_c1" value="125" />
   <parameter name="gui_divide_factor_c10" value="1" />
   <parameter name="gui_divide_factor_c11" value="1" />
   <parameter name="gui_divide_factor_c12" value="1" />
@@ -115,8 +115,8 @@
   <parameter name="gui_divide_factor_c15" value="1" />
   <parameter name="gui_divide_factor_c16" value="1" />
   <parameter name="gui_divide_factor_c17" value="1" />
-  <parameter name="gui_divide_factor_c2" value="200" />
-  <parameter name="gui_divide_factor_c3" value="50" />
+  <parameter name="gui_divide_factor_c2" value="192" />
+  <parameter name="gui_divide_factor_c3" value="1" />
   <parameter name="gui_divide_factor_c4" value="1" />
   <parameter name="gui_divide_factor_c5" value="1" />
   <parameter name="gui_divide_factor_c6" value="1" />
@@ -158,10 +158,10 @@
   <parameter name="gui_fractional_cout" value="32" />
   <parameter name="gui_mif_generate" value="false" />
   <parameter name="gui_multiply_factor" value="6" />
-  <parameter name="gui_number_of_clocks" value="4" />
+  <parameter name="gui_number_of_clocks" value="2" />
   <parameter name="gui_operation_mode" value="direct" />
-  <parameter name="gui_output_clock_frequency0" value="100.0" />
-  <parameter name="gui_output_clock_frequency1" value="100.0" />
+  <parameter name="gui_output_clock_frequency0" value="2.4" />
+  <parameter name="gui_output_clock_frequency1" value="2.4" />
   <parameter name="gui_output_clock_frequency10" value="100.0" />
   <parameter name="gui_output_clock_frequency11" value="100.0" />
   <parameter name="gui_output_clock_frequency12" value="100.0" />
@@ -239,7 +239,7 @@
   <parameter name="gui_ps_units9" value="ps" />
   <parameter name="gui_refclk1_frequency" value="100.0" />
   <parameter name="gui_refclk_switch" value="false" />
-  <parameter name="gui_reference_clock_frequency" value="100.0" />
+  <parameter name="gui_reference_clock_frequency" value="50.0" />
   <parameter name="gui_switchover_delay" value="0" />
   <parameter name="gui_switchover_mode">Automatic Switchover</parameter>
   <parameter name="gui_use_locked" value="false" />

@@ -67,6 +67,8 @@ begin
           when stop_bits =>
             if samples(1) = '1' then
               output <= buf;
+            else
+              output <= "00000000";
             end if;
             state <= start_bit;
         end case;
