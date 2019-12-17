@@ -12,11 +12,10 @@ entity uart is
   generic ( n_stop_bits : natural range 1 to 2 := 1;
             parity_type : parity_t := none );
   port ( clk : in std_logic;
-         clk_reset : buffer std_logic := '1';
+         clk_reset : out std_logic := '1';
          rx : in std_logic;
-         tx : out std_logic;
-         input : in std_logic_vector(0 to 7);
-         output : out std_logic_vector(0 to 7) );
+         output : out std_logic_vector(0 to 7);
+         ready : out std_logic );
 end;
 
 architecture structure of uart is
@@ -24,14 +23,15 @@ architecture structure of uart is
 
   signal state : rx_state := stop_bits;
   signal phase : natural range 0 to 1 := 0;
-  signal done : std_logic;
+  signal err : std_logic := '1';  -- nothing ready
 
+  signal done : std_logic;
   signal buf : std_logic_vector(output'range);
   signal idx : natural range buf'range;
 begin
-  tx <= '1';
   done <=  '1' when phase = phase'left and state = start_bit else '0';
   clk_reset <= rx and done;
+  ready <= done and not err;
 
   process (clk)
     variable samples : std_logic_vector(1 to phase'right);
@@ -67,8 +67,9 @@ begin
           when stop_bits =>
             if samples(1) = '1' then
               output <= buf;
+              err <= '0';
             else
-              output <= "00000000";
+              err <= '1';
             end if;
             state <= start_bit;
         end case;
