@@ -29,8 +29,10 @@ begin
                 port map ( refclk_clk => oscillator, reset_reset => '0', outclk_clk => uart_clk );
 	display : entity work.seven_segments_dec generic map ( n => 4 )
 		port map ( value => unsigned(full_switches), output => seven_segments );
-        uart : entity work.uart generic map ( bit_samples => 15 )
+        uart_recv : entity work.uart_rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, ready => uart_ready );
+        uart_trans : entity work.uart_tx generic map ( bit_clocks => 15 )
+		port map ( tx => uart_tx, clk => uart_clk, input => uart_data, ready => uart_ready);
 
         process (uart_ready)
         begin
