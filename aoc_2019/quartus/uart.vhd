@@ -12,7 +12,8 @@ use work.uart_util.all;
 entity uart_rx is
   -- FIXME: There is a timing issue - only works with 2 stop bits (+cstopb)
   generic ( bit_clocks : positive;
-            parity_type : parity_t := none );
+            parity_type : parity_t := none;
+            n_stop_bits : positive range 1 to 2 := 1 );
   port ( clk : in std_logic;
          rx : in std_logic;
          output : out std_logic_vector(0 to 7);
@@ -20,22 +21,31 @@ entity uart_rx is
 end;
 
 architecture structure of uart_rx is
-  signal state : state_t := start_bit;
+  signal state : state_t := stop_bits;
   signal phase : natural range 1 to bit_clocks := 1;
-  signal done : std_logic := '0';
+  signal start_toggle, done_toggle : boolean := false;
+  signal err : boolean := true; -- Nothing received
 
-  signal err : std_logic;
-  signal buf : std_logic_vector(output'range);
-  signal idx : natural range buf'range;
   signal idle : boolean;
+  signal idx : natural range output'range;
+  signal buf : std_logic_vector(output'range);
+  signal samples : std_logic_vector(1 to bit_clocks);
 begin
-  ready <= done and not err;
-  idle <= state = start_bit and rx /= '0';
+  idle <= start_toggle = done_toggle;
+  ready <= '1' when idle and not err else '0';
+
+  process (rx, idle)
+  begin
+    if falling_edge(rx) and idle then
+      start_toggle <= not start_toggle;
+    end if;
+  end process;
 
   process (clk)
-    variable sample : std_logic;
   begin
     if rising_edge(clk) then
+      samples(phase) <= rx;
+
       if idle then
         phase <= phase'left;
       elsif phase = phase'right then
@@ -44,43 +54,47 @@ begin
         phase <= phase + 1;
       end if;
 
-      if phase = phase'left + (phase'right - phase'left) / 2 then
-        sample := rx;
-      end if;
-
       if phase = phase'right then
         case state is
           when start_bit =>
-            if sample = '0' then
+            if samples(samples'length / 2) /= '0' then
+              done_toggle <= not done_toggle;
+              err <= true;
+            else
               state <= data;
               idx <= 0;
-              done <= '0';
-            else
-              state <= start_bit;
+              err <= false;
             end if;
           when data =>
-            buf(idx) <= sample;
-
+            buf(idx) <= samples(samples'length / 2);
             if idx = idx'right then
               state <= stop_bits;
+              idx <= 0;
             else
               idx <= idx + 1;
             end if;
           when stop_bits =>
-            done <= '1';
-            state <= start_bit;
-            if sample = '1' then
-              output <= buf;
-              err <= '0';
-            else
-              err <= '1';
+            idx <= idx + 1;
+            if samples(samples'length / 2) /= '1' then
+              err <= true;
+              state <= start_bit;
+              done_toggle <= not done_toggle;
             end if;
         end case;
+      end if;
+
+      if state = stop_bits and idx + 1 = n_stop_bits and phase > samples'length / 2 then
+        state <= start_bit;
+        done_toggle <= not done_toggle;
+        if samples(samples'length / 2) /= '1' then
+          err <= true;
+        else
+          output <= buf;
+        end if;
       end if;
     end if;
   end process;
 end;
-
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -101,23 +115,23 @@ end;
 architecture structure of uart_tx is
   signal state : state_t := stop_bits;
   signal phase : natural range 1 to bit_clocks := bit_clocks;
-  signal ready_toggle, done_toggle : std_logic := '0';
+  signal start_toggle, done_toggle : std_logic := '0';
 
   signal buf : std_logic_vector(input'range);
   signal idx : natural range buf'range;
   signal idle : boolean;
 begin
-  idle <= ready_toggle = done_toggle;
+  idle <= start_toggle = done_toggle;
 
   with state select tx <=
     '0' when start_bit,
     buf(idx) when data,
     '1' when stop_bits;
 
-  process (ready)
+  process (ready, idle)
   begin
-    if rising_edge(ready) then
-      ready_toggle <= not ready_toggle;
+    if rising_edge(ready) and idle then
+      start_toggle <= not start_toggle;
       buf <= input;
     end if;
   end process;
@@ -127,36 +141,34 @@ begin
     if rising_edge(clk) then
       if idle then
         phase <= phase'left;
+      elsif phase = phase'right then
+        phase <= phase'left;
       else
-        if phase = phase'right then
-          phase <= phase'left;
-        else
-          phase <= phase + 1;
-        end if;
+        phase <= phase + 1;
+      end if;
 
-        if phase = phase'right then
-          case state is
-            when start_bit =>
-              state <= data;
+      if phase = phase'right then
+        case state is
+          when start_bit =>
+            state <= data;
+            idx <= 0;
+          when data =>
+            if idx = idx'right then
+              state <= stop_bits;
               idx <= 0;
-            when data =>
-              if idx = idx'right then
-                state <= stop_bits;
-                idx <= 0;
-              else
-                idx <= idx + 1;
-              end if;
-            when stop_bits =>
-              if idx = 3 then
-                state <= start_bit;
-              elsif idx = 2 then
-                done_toggle <= not done_toggle;
-                idx <= idx + 1;
-              elsif idx < 2 then
-                idx <= idx + 1;
-              end if;
-          end case;
-        end if;
+            else
+              idx <= idx + 1;
+            end if;
+          when stop_bits =>
+            if idx = 3 then
+              state <= start_bit;
+            elsif idx = 2 then
+              done_toggle <= not done_toggle;
+              idx <= idx + 1;
+            elsif idx < 2 then
+              idx <= idx + 1;
+            end if;
+        end case;
       end if;
     end if;
   end process;
