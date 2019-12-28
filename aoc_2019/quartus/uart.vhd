@@ -83,13 +83,16 @@ begin
         end case;
       end if;
 
-      if state = stop_bits and idx + 1 = n_stop_bits and phase > samples'length / 2 then
-        state <= start_bit;
-        done_toggle <= not done_toggle;
-        if samples(samples'length / 2) /= '1' then
-          err <= true;
-        else
-          output <= buf;
+      if state = stop_bits and idx + 1 = n_stop_bits then
+        if phase = samples'length / 2 + 1 then
+          if samples(samples'length / 2) /= '1' then
+            err <= true;
+          else
+            output <= buf;
+          end if;
+        elsif phase > samples'length / 2 + 2 then
+          state <= start_bit;
+          done_toggle <= not done_toggle;
         end if;
       end if;
     end if;
