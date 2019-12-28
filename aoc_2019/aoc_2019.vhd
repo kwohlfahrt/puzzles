@@ -18,6 +18,7 @@ architecture data of aoc_2019 is
 	signal uart_clk, uart_ready : std_logic;
 	signal checksum : std_logic_vector(7 downto 0) := "00000000";
 	signal uart_data : std_logic_vector(7 downto 0);
+        signal value : unsigned(13 downto 0);
 begin
 	full_switches(full_switches'left downto 10) <= "0000";
 	full_switches(9 downto 0) <= switches;
@@ -27,12 +28,14 @@ begin
         leds_green <= checksum;
         uart_pll : entity work.uart_clk_pll
                 port map ( refclk_clk => oscillator, reset_reset => '0', outclk_clk => uart_clk );
-	display : entity work.seven_segments_dec generic map ( n => 4 )
-		port map ( value => unsigned(full_switches), output => seven_segments );
         uart_recv : entity work.uart_rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, ready => uart_ready );
         uart_trans : entity work.uart_tx generic map ( bit_clocks => 15 )
 		port map ( tx => uart_tx, clk => uart_clk, input => uart_data, ready => uart_ready);
+        parser : entity work.int_parser generic map ( value_size => value'length )
+                port map ( byte => uart_data, byte_ready => uart_ready, value => value );
+	display : entity work.seven_segments_dec generic map ( n => 4 )
+		port map ( value => value, output => seven_segments );
 
         process (uart_ready)
         begin

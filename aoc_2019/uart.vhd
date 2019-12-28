@@ -16,7 +16,7 @@ entity uart_rx is
             n_stop_bits : positive range 1 to 2 := 1 );
   port ( clk : in std_logic;
          rx : in std_logic;
-         output : out std_logic_vector(0 to 7);
+         output : out std_logic_vector(7 downto 0);
          ready : out std_logic );
 end;
 
@@ -27,7 +27,8 @@ architecture structure of uart_rx is
   signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
-  signal idx : natural range output'range;
+  signal data_idx : natural range output'right to output'left;
+  signal stop_idx : natural range 1 to n_stop_bits;
   signal buf : std_logic_vector(output'range);
   signal samples : std_logic_vector(1 to bit_clocks);
 begin
@@ -62,19 +63,19 @@ begin
               err <= true;
             else
               state <= data;
-              idx <= 0;
+              data_idx <= data_idx'left;
               err <= false;
             end if;
           when data =>
-            buf(idx) <= samples(samples'length / 2);
-            if idx = idx'right then
+            buf(data_idx) <= samples(samples'length / 2);
+            if data_idx = data_idx'right then
               state <= stop_bits;
-              idx <= 0;
+              stop_idx <= stop_idx'left;
             else
-              idx <= idx + 1;
+              data_idx <= data_idx'rightof(data_idx);
             end if;
           when stop_bits =>
-            idx <= idx + 1;
+            stop_idx <= stop_idx'rightof(stop_idx);
             if samples(samples'length / 2) /= '1' then
               err <= true;
               state <= start_bit;
@@ -83,7 +84,7 @@ begin
         end case;
       end if;
 
-      if state = stop_bits and idx + 1 = n_stop_bits then
+      if state = stop_bits and stop_idx = n_stop_bits then
         if phase = samples'length / 2 + 1 then
           if samples(samples'length / 2) /= '1' then
             err <= true;
@@ -111,7 +112,7 @@ entity uart_tx is
             parity_type : parity_t := none );
   port ( clk : in std_logic;
          tx : out std_logic;
-         input : in std_logic_vector(0 to 7);
+         input : in std_logic_vector(7 downto 0);
          ready : in std_logic );
 end;
 
@@ -121,14 +122,15 @@ architecture structure of uart_tx is
   signal start_toggle, done_toggle : std_logic := '0';
 
   signal buf : std_logic_vector(input'range);
-  signal idx : natural range buf'range;
+  signal data_idx : natural range buf'right to buf'left;
+  signal stop_idx : natural range 1 to n_stop_bits + 4;
   signal idle : boolean;
 begin
   idle <= start_toggle = done_toggle;
 
   with state select tx <=
     '0' when start_bit,
-    buf(idx) when data,
+    buf(data_idx) when data,
     '1' when stop_bits;
 
   process (ready, idle)
@@ -154,22 +156,23 @@ begin
         case state is
           when start_bit =>
             state <= data;
-            idx <= 0;
+            data_idx <= data_idx'left;
           when data =>
-            if idx = idx'right then
+            if data_idx = data_idx'right then
               state <= stop_bits;
-              idx <= 0;
+              stop_idx <= stop_idx'left;
             else
-              idx <= idx + 1;
+              data_idx <= data_idx'rightof(data_idx);
             end if;
           when stop_bits =>
-            if idx = 3 then
+            -- FIXME: These constants are weird
+            if stop_idx = 4 then
               state <= start_bit;
-            elsif idx = 2 then
+            elsif stop_idx = 3 then
               done_toggle <= not done_toggle;
-              idx <= idx + 1;
-            elsif idx < 2 then
-              idx <= idx + 1;
+              stop_idx <= stop_idx'rightof(stop_idx);
+            elsif stop_idx < 3 then
+              stop_idx <= stop_idx'rightof(stop_idx);
             end if;
         end case;
       end if;
