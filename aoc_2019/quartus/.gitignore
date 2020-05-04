@@ -1,0 +1,8 @@
+# outputs of qsys-generate
+uart_clk_pll/
+uart_clk_pll.sopcinfo
+# outputs of quartus_*
+db/
+incremental_db/
+output_files/
+simulation/
