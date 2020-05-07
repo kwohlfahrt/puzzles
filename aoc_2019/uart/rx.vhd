@@ -47,7 +47,8 @@ begin
 
   process (sample)
   begin
-    if rising_edge(sample) then
+    -- should be rising_edge, but Quartus :(
+    if (sample'event and sample) then
       if state = start_bit then
         start_sample <= rx;
       elsif state = data then
