@@ -21,19 +21,22 @@ architecture structure of rx is
   subtype data_idx_t is natural range output'right to output'left;
   subtype stop_idx_t is natural range 1 to n_stop_bits;
 
-  signal state : state_t := stop_bits;
-  signal phase : phase_t := 1;
+  signal state : state_t := start_bit;
+  signal phase : phase_t := phase_t'low;
   signal start_toggle, done_toggle : boolean := false;
   signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
-  signal data_idx : data_idx_t;
-  signal stop_idx : stop_idx_t;
-  signal buf : std_logic_vector(output'range);
-  signal samples : std_logic_vector(1 to bit_clocks);
+  signal sample : boolean;
+  signal data_idx : data_idx_t := data_idx_t'high;
+  signal stop_idx : stop_idx_t := stop_idx_t'low;
+  signal data_samples : std_logic_vector(output'range);
+  signal stop_sample : std_logic;
+  signal start_sample : std_logic;
 begin
   idle <= start_toggle = done_toggle;
   ready <= '1' when idle and not err else '0';
+  sample <= phase = phase_t'high / 2;
 
   process (rx, idle)
   begin
@@ -42,59 +45,50 @@ begin
     end if;
   end process;
 
-  process (clk)
+  process (sample)
   begin
-    if rising_edge(clk) then
-      samples(phase) <= rx;
+    if rising_edge(sample) then
+      if state = start_bit then
+        start_sample <= rx;
+      elsif state = data then
+        data_samples(data_idx) <= rx;
+      elsif state = stop_bits then
+        stop_sample <= rx;
+      end if;
+    end if;
+  end process;
 
-      if idle then
-        phase <= phase_t'left;
-      elsif phase = phase_t'right then
-        phase <= phase_t'left;
+  process (clk, idle)
+  begin
+    if rising_edge(clk) and not idle then
+      if phase = phase_t'high then
+        phase <= phase_t'low;
       else
-        phase <= phase + 1;
+        phase <= phase_t'succ(phase);
       end if;
 
-      if phase = phase_t'right then
+      if phase = phase_t'high then
         case state is
           when start_bit =>
-            if samples(samples'length / 2) /= '0' then
-              done_toggle <= not done_toggle;
-              err <= true;
-            else
-              state <= data;
-              data_idx <= data_idx_t'left;
-              err <= false;
-            end if;
+            state <= data;
           when data =>
-            buf(data_idx) <= samples(samples'length / 2);
-            if data_idx = data_idx_t'right then
+            if data_idx = data_idx_t'low then
+              data_idx <= data_idx_t'high;
               state <= stop_bits;
-              stop_idx <= stop_idx_t'left;
             else
-              data_idx <= data_idx_t'rightof(data_idx);
+              data_idx <= data_idx_t'pred(data_idx);
             end if;
           when stop_bits =>
-            stop_idx <= stop_idx_t'rightof(stop_idx);
-            if samples(samples'length / 2) /= '1' then
-              err <= true;
+            if stop_idx = stop_idx_t'high then
+              stop_idx <= stop_idx_t'low;
               state <= start_bit;
               done_toggle <= not done_toggle;
+              err <= false;
+              output <= data_samples;
+            else
+              stop_idx <= stop_idx_t'succ(stop_idx);
             end if;
         end case;
-      end if;
-
-      if state = stop_bits and stop_idx = n_stop_bits then
-        if phase = samples'length / 2 + 1 then
-          if samples(samples'length / 2) /= '1' then
-            err <= true;
-          else
-            output <= buf;
-          end if;
-        elsif phase > samples'length / 2 + 2 then
-          state <= start_bit;
-          done_toggle <= not done_toggle;
-        end if;
       end if;
     end if;
   end process;
