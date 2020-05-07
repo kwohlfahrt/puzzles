@@ -71,7 +71,13 @@ begin
       if phase = phase_t'high then
         case state is
           when start_bit =>
-            state <= data;
+            if start_sample /= '0' then
+              err <= true;
+              state <= start_bit;
+              done_toggle <= not done_toggle;
+            else
+              state <= data;
+            end if;
           when data =>
             if data_idx = data_idx_t'low then
               data_idx <= data_idx_t'high;
@@ -80,7 +86,11 @@ begin
               data_idx <= data_idx_t'pred(data_idx);
             end if;
           when stop_bits =>
-            if stop_idx = stop_idx_t'high then
+            if stop_sample /= '1' then
+              err <= true;
+              state <= start_bit;
+              done_toggle <= not done_toggle;
+            elsif stop_idx = stop_idx_t'high then
               stop_idx <= stop_idx_t'low;
               state <= start_bit;
               done_toggle <= not done_toggle;
