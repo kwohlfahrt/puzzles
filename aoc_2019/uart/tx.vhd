@@ -15,13 +15,18 @@ entity tx is
 end;
 
 architecture structure of tx is
+  -- Quartus does not support _t annotation
+  subtype phase_t is natural range 1 to bit_clocks;
+  subtype data_idx_t is natural range input'right to input'left;
+  subtype stop_idx_t is natural range 1 to n_stop_bits;
+
   signal state : state_t := stop_bits;
-  signal phase : natural range 1 to bit_clocks := bit_clocks;
+  signal phase : phase_t := bit_clocks;
   signal start_toggle, done_toggle : std_logic := '0';
 
   signal buf : std_logic_vector(input'range);
-  signal data_idx : natural range buf'right to buf'left;
-  signal stop_idx : natural range 1 to n_stop_bits + 4;
+  signal data_idx : data_idx_t;
+  signal stop_idx : stop_idx_t;
   signal idle : boolean;
 begin
   idle <= start_toggle = done_toggle;
@@ -43,24 +48,24 @@ begin
   begin
     if rising_edge(clk) then
       if idle then
-        phase <= phase'left;
-      elsif phase = phase'right then
-        phase <= phase'left;
+        phase <= phase_t'left;
+      elsif phase = phase_t'right then
+        phase <= phase_t'left;
       else
         phase <= phase + 1;
       end if;
 
-      if phase = phase'right then
+      if phase = phase_t'right then
         case state is
           when start_bit =>
             state <= data;
-            data_idx <= data_idx'left;
+            data_idx <= data_idx_t'left;
           when data =>
-            if data_idx = data_idx'right then
+            if data_idx = data_idx_t'right then
               state <= stop_bits;
-              stop_idx <= stop_idx'left;
+              stop_idx <= stop_idx_t'left;
             else
-              data_idx <= data_idx'rightof(data_idx);
+              data_idx <= data_idx_t'rightof(data_idx);
             end if;
           when stop_bits =>
             -- FIXME: These constants are weird
@@ -68,9 +73,9 @@ begin
               state <= start_bit;
             elsif stop_idx = 3 then
               done_toggle <= not done_toggle;
-              stop_idx <= stop_idx'rightof(stop_idx);
+              stop_idx <= stop_idx_t'rightof(stop_idx);
             elsif stop_idx < 3 then
-              stop_idx <= stop_idx'rightof(stop_idx);
+              stop_idx <= stop_idx_t'rightof(stop_idx);
             end if;
         end case;
       end if;

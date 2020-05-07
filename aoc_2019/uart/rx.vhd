@@ -16,14 +16,19 @@ entity rx is
 end;
 
 architecture structure of rx is
+  -- Quartus does not support 'subtype annotation
+  subtype phase_t is natural range 1 to bit_clocks;
+  subtype data_idx_t is natural range output'right to output'left;
+  subtype stop_idx_t is natural range 1 to n_stop_bits;
+
   signal state : state_t := stop_bits;
-  signal phase : natural range 1 to bit_clocks := 1;
+  signal phase : phase_t := 1;
   signal start_toggle, done_toggle : boolean := false;
   signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
-  signal data_idx : natural range output'right to output'left;
-  signal stop_idx : natural range 1 to n_stop_bits;
+  signal data_idx : data_idx_t;
+  signal stop_idx : stop_idx_t;
   signal buf : std_logic_vector(output'range);
   signal samples : std_logic_vector(1 to bit_clocks);
 begin
@@ -43,14 +48,14 @@ begin
       samples(phase) <= rx;
 
       if idle then
-        phase <= phase'left;
-      elsif phase = phase'right then
-        phase <= phase'left;
+        phase <= phase_t'left;
+      elsif phase = phase_t'right then
+        phase <= phase_t'left;
       else
         phase <= phase + 1;
       end if;
 
-      if phase = phase'right then
+      if phase = phase_t'right then
         case state is
           when start_bit =>
             if samples(samples'length / 2) /= '0' then
@@ -58,19 +63,19 @@ begin
               err <= true;
             else
               state <= data;
-              data_idx <= data_idx'left;
+              data_idx <= data_idx_t'left;
               err <= false;
             end if;
           when data =>
             buf(data_idx) <= samples(samples'length / 2);
-            if data_idx = data_idx'right then
+            if data_idx = data_idx_t'right then
               state <= stop_bits;
-              stop_idx <= stop_idx'left;
+              stop_idx <= stop_idx_t'left;
             else
-              data_idx <= data_idx'rightof(data_idx);
+              data_idx <= data_idx_t'rightof(data_idx);
             end if;
           when stop_bits =>
-            stop_idx <= stop_idx'rightof(stop_idx);
+            stop_idx <= stop_idx_t'rightof(stop_idx);
             if samples(samples'length / 2) /= '1' then
               err <= true;
               state <= start_bit;
