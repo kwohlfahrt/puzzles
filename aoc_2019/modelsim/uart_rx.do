@@ -9,12 +9,16 @@ vcom -2008 -work work {../uart/tbs/rx.vhd}
 
 vsim -quiet -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L rtl_work -L work -L uart_clk_pll -L uart -voptargs="+acc" tb1 tb2 tb3
 
-add wave -group tb1 sim:/tb1/*
-add wave -group tb2 sim:/tb2/*
-add wave -group tb3 sim:/tb3/*
+if { !([info exists HEADLESS] && !$HEADLESS) } {
+    add wave -group tb1 sim:/tb1/*
+    add wave -group tb2 sim:/tb2/*
+    add wave -group tb3 sim:/tb3/*
+}
 
-view structure
-view signals
 run 200 ns
 
-wave zoom full
+if { !([info exists HEADLESS] && !$HEADLESS) } {
+    view structure
+    view signals
+    wave zoom full
+}
