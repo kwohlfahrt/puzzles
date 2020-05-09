@@ -12,6 +12,7 @@ architecture arch of tb1 is
   signal rx : std_logic := '1';
   signal valid : std_logic;
   signal output : std_logic_vector(7 downto 0);
+  signal done : boolean := false;
 
   type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
   constant examples : examples_t := ("00001111", "10101011");
@@ -57,13 +58,17 @@ begin
     end loop;
 
     report "end of test";
+    done <= true;
     wait;
   end process;
 
   process
   begin
-    wait for period / 2;
-    clk <= not clk;
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
   end process;
 end arch;
 
@@ -81,6 +86,7 @@ architecture arch of tb2 is
   signal rx : std_logic := '1';
   signal valid : std_logic;
   signal output : std_logic_vector(7 downto 0);
+  signal done : boolean := false;
 
   constant bit_clocks : positive := 5;
   constant period : time := 1 ns;
@@ -120,13 +126,17 @@ begin
     assert valid = '1';
 
     report "end of test";
+    done <= true;
     wait;
   end process;
 
   process
   begin
-    wait for period / 2;
-    clk <= not clk;
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
   end process;
 end arch;
 
@@ -145,6 +155,7 @@ architecture arch of tb3 is
   signal output : std_logic;
   signal trx : std_logic_vector(7 downto 0);
   signal valid : std_logic;
+  signal done : boolean := false;
 
   type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
   constant examples : examples_t := ("00001111", "10101011");
@@ -194,12 +205,16 @@ begin
       wait for bit_clocks * period / 2;
     end loop;
     report "end of test";
+    done <= true;
     wait;
   end process;
 
   process
   begin
-    wait for period / 2;
-    clk <= not clk;
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
   end process;
 end arch;

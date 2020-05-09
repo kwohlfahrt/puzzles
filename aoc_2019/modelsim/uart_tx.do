@@ -14,7 +14,7 @@ if { !([info exists HEADLESS] && !$HEADLESS) } {
     add wave -group tb2 sim:/tb2/*
 }
 
-run 120 ns
+run -all
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     view structure

@@ -14,6 +14,7 @@ architecture arch of tb1 is
   signal tx : std_logic;
   signal ready : std_logic;
   signal valid : std_logic := '0';
+  signal done : boolean := false;
 
   type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
   constant examples : examples_t := ("00001111", "10101011");
@@ -66,13 +67,17 @@ begin
     assert state = state'subtype'left;
     assert phase = phase'subtype'low;
     report "end of test";
+    done <= true;
     wait;
   end process;
 
   process
   begin
-    wait for 500 ps;
-    clk <= not clk;
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
   end process;
 end arch;
 
@@ -92,6 +97,7 @@ architecture arch of tb2 is
   signal trx : std_logic;
   signal tx_valid : std_logic := '0';
   signal rx_valid : std_logic;
+  signal done : boolean := false;
 
   type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
   constant examples : examples_t := ("00001111", "10101011");
@@ -125,12 +131,16 @@ begin
       assert output = examples(i);
     end loop;
     report "end of test";
+    done <= true;
     wait;
   end process;
 
   process
   begin
-    wait for 500 ps;
-    clk <= not clk;
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
   end process;
 end arch;
