@@ -12,7 +12,7 @@ entity rx is
   port ( clk : in std_logic;
          rx : in std_logic;
          output : out std_logic_vector(7 downto 0);
-         ready : out std_logic );
+         valid : out std_logic );
 end;
 
 architecture structure of rx is
@@ -35,8 +35,8 @@ architecture structure of rx is
   signal start_sample : std_logic;
 begin
   idle <= start_toggle = done_toggle;
-  ready <= '1' when idle and not err else '0';
-  sample <= phase = phase_t'high / 2;
+  valid <= '1' when state = start_bit and not err else '0';
+  sample <= phase = (phase_t'high + 1) / 2;
 
   process (rx, idle)
   begin
@@ -93,7 +93,9 @@ begin
             elsif stop_idx = stop_idx_t'high then
               stop_idx <= stop_idx_t'low;
               state <= start_bit;
-              done_toggle <= not done_toggle;
+              if rx then
+                done_toggle <= not done_toggle;
+              end if;
               err <= false;
               output <= data_samples;
             else
