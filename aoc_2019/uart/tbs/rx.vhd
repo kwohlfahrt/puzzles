@@ -13,42 +13,56 @@ architecture arch of tb1 is
   signal valid : std_logic;
   signal output : std_logic_vector(7 downto 0);
 
+  type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
+  constant examples : examples_t := ("00001111", "10101011");
   constant bit_clocks : positive := 5;
+  constant period : time := 1 ns;
 begin
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
     port map ( rx => rx, clk => clk, output => output, valid => valid );
+
+  -- stimulus
   process
-    type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
-    constant examples : examples_t := ("00001111", "10101011");
   begin
     rx <= '1';
-    wait for bit_clocks * 2 ns;
+    wait for bit_clocks * 2 * period;
 
     for i in examples'range loop
       rx <= '0';
-      wait for bit_clocks * 100 ps;
-      if i > examples'left then
-        assert output = examples(i - 1);
-        assert valid = '1';
-      end if;
-      wait for bit_clocks * 900 ps;
+      wait for bit_clocks * period;
       for j in examples(i)'range loop
         rx <= examples(i)(j);
-        wait for bit_clocks * 1 ns;
+        wait for bit_clocks * period;
       end loop;
       rx <= '1';
-      wait for bit_clocks * 1 ns;
+      wait for bit_clocks * period;
     end loop;
-    wait for bit_clocks * 10 ns;
-    assert output = examples(examples'right);
-    assert valid = '1';
+    wait;
+  end process;
+
+  -- monitor
+  process
+  begin
+    -- warm-up
+    wait for bit_clocks * 2 * period;
+    -- first cycle
+    wait for bit_clocks * 10 * period;
+    -- offset
+    wait for period / 10;
+
+    for i in examples'range loop
+      assert output = examples(i);
+      assert valid = '1';
+      wait for bit_clocks * 10 * period;
+    end loop;
+
     report "end of test";
     wait;
   end process;
 
   process
   begin
-    wait for 500 ps;
+    wait for period / 2;
     clk <= not clk;
   end process;
 end arch;
@@ -69,39 +83,40 @@ architecture arch of tb2 is
   signal output : std_logic_vector(7 downto 0);
 
   constant bit_clocks : positive := 5;
+  constant period : time := 1 ns;
 begin
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
     port map ( rx => rx, clk => clk, output => output, valid => valid );
   process
   begin
     rx <= '1';
-    wait for bit_clocks * 2 ns;
+    wait for bit_clocks * 2 * period;
     -- 'start' glitch
     rx <= '0';
-    wait for (bit_clocks / 2 - 1) * 1 ns;
+    wait for (bit_clocks / 2 - 1) * period;
     rx <= '1';
-    wait for (bit_clocks - bit_clocks / 2 + 1) * 1 ns;
+    wait for (bit_clocks - bit_clocks / 2 + 1) * period;
     rx <= '1';
-    wait for bit_clocks * 9 ns;
+    wait for bit_clocks * 9 * period;
     assert valid = '0';
 
     rx <= '1';
-    wait for bit_clocks * 2 ns;
+    wait for bit_clocks * 2 * period;
     rx <= '0';
-    wait for bit_clocks * 1 ns;
+    wait for bit_clocks * period;
     rx <= '1';
-    wait for bit_clocks * 8 ns;
+    wait for bit_clocks * 8 * period;
     -- 'stop' glitch
     rx <= '0';
-    wait for bit_clocks * 1 ns;
+    wait for bit_clocks * period;
     assert valid = '0';
 
     rx <= '1';
-    wait for bit_clocks * 2 ns;
+    wait for bit_clocks * 2 * period;
     rx <= '0';
-    wait for bit_clocks * 1 ns;
+    wait for bit_clocks * period;
     rx <= '1';
-    wait for bit_clocks * 10 ns;
+    wait for bit_clocks * 10 * period;
     assert valid = '1';
 
     report "end of test";
@@ -110,7 +125,7 @@ begin
 
   process
   begin
-    wait for 500 ps;
+    wait for period / 2;
     clk <= not clk;
   end process;
 end arch;

@@ -14,36 +14,55 @@ architecture arch of tb1 is
   signal tx : std_logic;
   signal ready : std_logic;
   signal valid : std_logic := '0';
+
+  type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
+  constant examples : examples_t := ("00001111", "10101011");
   constant bit_clocks : positive := 5;
+  constant period : time := 1 ns;
 begin
   uart_tx : entity uart.tx generic map (bit_clocks => bit_clocks)
     port map ( tx => tx, clk => clk, input => input, valid => valid, ready => ready );
   process
-    type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
-    constant examples : examples_t := ("00001111", "10101011");
-    alias state is << signal .tb1.uart_tx.state : uart.util.state_t >>;
-    alias phase is << signal .tb1.uart_tx.phase : natural range 1 to bit_clocks >>;
   begin
-    wait for bit_clocks * 2 ns;
+    wait for bit_clocks * 2 * period;
 
     for i in examples'range loop
       input <= examples(i);
       valid <= '1';
-      -- start bit
-      wait for bit_clocks * 1 ns;
-      for j in examples(i)'range loop
-        wait for bit_clocks * 100 ps;
-        --assert tx = examples(i)(j);
-        wait for bit_clocks * 800 ps;
-        --assert tx = examples(i)(j);
-        wait for bit_clocks * 100 ps;
-      end loop;
+      wait for bit_clocks * 9 * period;
       valid <= '0';
-      -- stop bit
-      wait for bit_clocks * 1 ns;
+      wait for bit_clocks * period;
     end loop;
-    wait for 1 ns;
+    wait;
+  end process;
+
+  process
+    alias state is << signal .tb1.uart_tx.state : uart.util.state_t >>;
+    alias phase is << signal .tb1.uart_tx.phase : natural range 1 to bit_clocks >>;
+  begin
+    wait for bit_clocks * 2 * period;
+
+    for i in examples'range loop
+      wait for bit_clocks * period / 10;
+      assert tx = '0';
+      wait for bit_clocks * 8 * period / 10;
+      assert tx = '0';
+      wait for bit_clocks * period / 10;
+      for j in examples(i)'range loop
+        wait for bit_clocks * period / 10;
+        assert tx = examples(i)(j);
+        wait for bit_clocks * 8 * period / 10;
+        assert tx = examples(i)(j);
+        wait for bit_clocks * period / 10;
+      end loop;
+      wait for bit_clocks * period / 10;
+      assert tx = '1';
+      wait for bit_clocks * 8 * period / 10;
+      assert tx = '1';
+      wait for bit_clocks * period / 10;
+    end loop;
     -- assert we are ready for next byte
+    wait for bit_clocks * period;
     assert state = state'subtype'left;
     assert phase = phase'subtype'low;
     report "end of test";
@@ -74,30 +93,37 @@ architecture arch of tb2 is
   signal tx_valid : std_logic := '0';
   signal rx_valid : std_logic;
 
+  type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
+  constant examples : examples_t := ("00001111", "10101011");
   constant bit_clocks : positive := 5;
+  constant period : time := 1 ns;
 begin
   uart_tx : entity uart.tx generic map (bit_clocks => bit_clocks)
     port map ( tx => trx, clk => clk, input => input, valid => tx_valid );
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
     port map ( rx => trx, clk => clk, output => output, valid => rx_valid );
-  process
-    type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
-    constant examples : examples_t := ("00001111", "10101011");
-  begin
-    wait for bit_clocks * 2 ns;
 
+  process
+  begin
+    wait for bit_clocks * 2 * period;
     for i in examples'range loop
       input <= examples(i);
       tx_valid <= '1';
-      wait for bit_clocks * 1 ns;
-      if i > examples'left then
-        assert output = examples(i - 1);
-      end if;
-      wait for bit_clocks * 9 ns;
+      wait for bit_clocks * 10 * period;
     end loop;
     tx_valid <= '0';
-    wait for 1 ns;
-    assert output = examples(examples'right);
+    wait;
+  end process;
+
+  process
+  begin
+    wait for bit_clocks * 2 * period;
+    wait for bit_clocks * period / 10;
+
+    for i in examples'range loop
+      wait for bit_clocks * 10 * period;
+      assert output = examples(i);
+    end loop;
     report "end of test";
     wait;
   end process;
