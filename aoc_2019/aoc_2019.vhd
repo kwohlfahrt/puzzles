@@ -33,7 +33,7 @@ begin
         uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, ready => uart_ready );
         uart_trans : entity uart.tx generic map ( bit_clocks => 15 )
-		port map ( tx => uart_tx, clk => uart_clk, input => uart_data, ready => uart_ready);
+		port map ( tx => uart_tx, clk => uart_clk, input => uart_data, valid => uart_ready);
         parser : entity work.int_parser generic map ( value_size => value'length )
                 port map ( byte => uart_data, byte_ready => uart_ready, value => value );
 	display : entity work.seven_segments_dec generic map ( n => 4 )
