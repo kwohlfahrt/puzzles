@@ -6,76 +6,82 @@ use work.uart_util.all;
 
 entity tx is
   generic ( bit_clocks : positive;
-            n_stop_bits : natural range 1 to 2 := 2;
+            n_stop_bits : natural range 1 to 2 := 1;
             parity_type : parity_t := none );
   port ( clk : in std_logic;
-         tx : out std_logic;
+         valid : in std_logic;
          input : in std_logic_vector(7 downto 0);
-         ready : in std_logic );
+         tx : out std_logic;
+         ready : buffer std_logic );
 end;
 
 architecture structure of tx is
-  -- Quartus does not support _t annotation
+  -- Quartus does not support 'subtype annotation
   subtype phase_t is natural range 1 to bit_clocks;
   subtype data_idx_t is natural range input'right to input'left;
   subtype stop_idx_t is natural range 1 to n_stop_bits;
 
-  signal state : state_t := stop_bits;
-  signal phase : phase_t := bit_clocks;
-  signal start_toggle, done_toggle : std_logic := '0';
+  signal state : state_t := start_bit;
+  signal phase : phase_t := phase_t'low;
+  signal start_toggle, done_toggle : boolean := false;
 
   signal buf : std_logic_vector(input'range);
-  signal data_idx : data_idx_t;
-  signal stop_idx : stop_idx_t;
-  signal idle : boolean;
+  signal data_idx : data_idx_t := data_idx_t'high;
+  signal stop_idx : stop_idx_t := stop_idx_t'low;
+  signal idle : boolean := true;
+  signal tx_sample : std_logic;
 begin
-  idle <= start_toggle = done_toggle;
+  ready <= '1' when start_toggle = done_toggle else '0';
+  tx <= tx_sample or ready;
 
-  with state select tx <=
+  with state select tx_sample <=
     '0' when start_bit,
     buf(data_idx) when data,
     '1' when stop_bits;
 
-  process (ready, idle)
-  begin
-    if rising_edge(ready) and idle then
-      start_toggle <= not start_toggle;
-      buf <= input;
-    end if;
-  end process;
-
   process (clk)
   begin
-    if rising_edge(clk) then
-      if idle then
-        phase <= phase_t'left;
-      elsif phase = phase_t'right then
-        phase <= phase_t'left;
+    if rising_edge(clk) and ready = '1' then
+        if not valid then
+          idle <= true;
+        else
+          start_toggle <= not start_toggle;
+          buf <= input;
+          idle <= false;
+        end if;
+    end if;
+
+    if rising_edge(clk) and not idle then
+      if phase = phase_t'high then
+        phase <= phase_t'low;
       else
-        phase <= phase + 1;
+        phase <= phase_t'succ(phase);
       end if;
 
-      if phase = phase_t'right then
+      if phase = phase_t'pred(phase_t'high)
+        and state = stop_bits
+        and stop_idx = stop_idx_t'high
+      then
+        done_toggle <= not done_toggle;
+      end if;
+
+      if phase = phase_t'high then
         case state is
           when start_bit =>
             state <= data;
-            data_idx <= data_idx_t'left;
           when data =>
-            if data_idx = data_idx_t'right then
+            if data_idx = data_idx_t'low then
+              data_idx <= data_idx_t'high;
               state <= stop_bits;
-              stop_idx <= stop_idx_t'left;
             else
-              data_idx <= data_idx_t'rightof(data_idx);
+              data_idx <= data_idx_t'pred(data_idx);
             end if;
           when stop_bits =>
-            -- FIXME: These constants are weird
-            if stop_idx = 4 then
+            if stop_idx = stop_idx_t'high then
+              stop_idx <= stop_idx_t'low;
               state <= start_bit;
-            elsif stop_idx = 3 then
-              done_toggle <= not done_toggle;
-              stop_idx <= stop_idx_t'rightof(stop_idx);
-            elsif stop_idx < 3 then
-              stop_idx <= stop_idx_t'rightof(stop_idx);
+            else
+              stop_idx <= stop_idx_t'succ(stop_idx);
             end if;
         end case;
       end if;
