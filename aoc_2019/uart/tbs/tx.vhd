@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart;
+use uart.util."=";
 
 entity tb1 is
 end tb1;
@@ -20,6 +21,8 @@ begin
   process
     type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
     constant examples : examples_t := ("00001111", "10101011");
+    alias state is << signal .tb1.uart_tx.state : uart.util.state_t >>;
+    alias phase is << signal .tb1.uart_tx.phase : natural range 1 to bit_clocks >>;
   begin
     wait for bit_clocks * 2 ns;
 
@@ -39,6 +42,10 @@ begin
       -- stop bit
       wait for bit_clocks * 1 ns;
     end loop;
+    wait for 1 ns;
+    -- assert we are ready for next byte
+    assert state = state'subtype'left;
+    assert phase = phase'subtype'low;
     report "end of test";
     wait;
   end process;

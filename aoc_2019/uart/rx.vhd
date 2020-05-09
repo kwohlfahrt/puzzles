@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.uart_util.all;
+use work.util.all;
 
 entity rx is
   -- FIXME: There is a timing issue - only works with 2 stop bits (+cstopb)
