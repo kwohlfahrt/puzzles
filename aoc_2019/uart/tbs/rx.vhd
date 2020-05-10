@@ -20,7 +20,7 @@ architecture arch of tb1 is
   constant period : time := 1 ns;
 begin
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
-    port map ( rx => rx, clk => clk, output => output, valid => valid );
+    port map ( rx => rx, clk => clk, output => output, valid => valid, ready => '1' );
 
   -- stimulus
   process
@@ -92,7 +92,7 @@ architecture arch of tb2 is
   constant period : time := 1 ns;
 begin
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
-    port map ( rx => rx, clk => clk, output => output, valid => valid );
+    port map ( rx => rx, clk => clk, output => output, valid => valid, ready => '1' );
   process
   begin
     rx <= '1';
@@ -122,7 +122,8 @@ begin
     rx <= '0';
     wait for bit_clocks * period;
     rx <= '1';
-    wait for bit_clocks * 10 * period;
+    wait for bit_clocks * 9 * period;
+    wait for 1 * period;
     assert valid = '1';
 
     report "end of test";
@@ -154,7 +155,7 @@ architecture arch of tb3 is
   signal input : std_logic := '1';
   signal output : std_logic;
   signal trx : std_logic_vector(7 downto 0);
-  signal valid : std_logic;
+  signal valid, ready : std_logic;
   signal done : boolean := false;
 
   type examples_t is array (natural range <>) of std_logic_vector(7 downto 0);
@@ -163,9 +164,9 @@ architecture arch of tb3 is
   constant period : time := 1 ns;
 begin
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
-    port map ( rx => input, clk => clk, output => trx, valid => valid );
+    port map ( rx => input, clk => clk, output => trx, valid => valid, ready => ready );
   uart_tx : entity uart.tx generic map (bit_clocks => bit_clocks)
-    port map ( tx => output, clk => clk, input => trx, valid => valid );
+    port map ( tx => output, clk => clk, input => trx, valid => valid, ready => ready );
 
   -- stimulus
   process

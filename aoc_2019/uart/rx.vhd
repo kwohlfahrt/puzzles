@@ -11,8 +11,9 @@ entity rx is
             n_stop_bits : positive range 1 to 2 := 1 );
   port ( clk : in std_logic;
          rx : in std_logic;
+         ready : in std_logic;
          output : out std_logic_vector(7 downto 0);
-         valid : out std_logic );
+         valid : buffer std_logic := '0' );
 end;
 
 architecture structure of rx is
@@ -35,15 +36,7 @@ architecture structure of rx is
   signal start_sample : std_logic;
 begin
   idle <= start_toggle = done_toggle;
-  valid <= '1' when state = start_bit and not err else '0';
   sample <= phase = (phase_t'high + 1) / 2;
-
-  process (rx, idle)
-  begin
-    if falling_edge(rx) and idle then
-      start_toggle <= not start_toggle;
-    end if;
-  end process;
 
   process (sample)
   begin
@@ -59,8 +52,19 @@ begin
     end if;
   end process;
 
+  process (rx, idle)
+  begin
+    if falling_edge(rx) and idle then
+      start_toggle <= not start_toggle;
+    end if;
+  end process;
+
   process (clk, idle)
   begin
+    if rising_edge(clk) and ready = '1' and valid = '1' then
+      valid <= '0';
+    end if;
+
     if rising_edge(clk) and not idle then
       if phase = phase_t'high then
         phase <= phase_t'low;
@@ -98,6 +102,7 @@ begin
               end if;
               err <= false;
               output <= data_samples;
+              valid <= '1';
             else
               stop_idx <= stop_idx_t'succ(stop_idx);
             end if;

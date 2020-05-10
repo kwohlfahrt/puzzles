@@ -105,9 +105,9 @@ architecture arch of tb2 is
   constant period : time := 1 ns;
 begin
   uart_tx : entity uart.tx generic map (bit_clocks => bit_clocks)
-    port map ( tx => trx, clk => clk, input => input, valid => tx_valid );
+    port map ( tx => trx, clk => clk, input => input, valid => tx_valid, ready => open );
   uart_rx : entity uart.rx generic map (bit_clocks => bit_clocks)
-    port map ( rx => trx, clk => clk, output => output, valid => rx_valid );
+    port map ( rx => trx, clk => clk, output => output, valid => rx_valid, ready => '1' );
 
   process
   begin
