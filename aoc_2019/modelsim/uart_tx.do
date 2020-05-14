@@ -1,6 +1,3 @@
-vlib uart_clk_pll
-vlog -vlog01compat -work uart_clk_pll +incdir+/home/kai/Documents/code/puzzles/aoc_2019/quartus/db/ip/uart_clk_pll/submodules {/home/kai/Documents/code/puzzles/aoc_2019/quartus/db/ip/uart_clk_pll/submodules/uart_clk_pll_pll.v}
-
 vlib uart
 vcom -2008 -work uart {../uart/*.vhd}
 
