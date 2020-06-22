@@ -8,6 +8,7 @@ library uart_pll;
 entity aoc_2019 is
 	port ( switches : in std_logic_vector(9 downto 0);
 	       buttons : in std_logic_vector(0 to 3);
+	       reset : in std_logic;
 	       seven_segments : out std_logic_vector(0 to 7 * 4 - 1);
 	       leds_red : out std_logic_vector(0 to 9);
 	       leds_green : out std_logic_vector(0 to 7);
@@ -30,7 +31,7 @@ begin
         end generate;
         leds_green <= checksum;
         uart_clk_src : entity uart_pll.uart_pll
-                port map ( refclk => oscillator, rst => '0', outclk_1 => uart_clk );
+                port map ( refclk => oscillator, rst => reset, outclk_1 => uart_clk );
         uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, valid => uart_valid, ready => uart_ready );
         uart_trans : entity uart.tx generic map ( bit_clocks => 15 )

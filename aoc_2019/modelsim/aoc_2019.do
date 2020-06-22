@@ -11,10 +11,10 @@ vsim -L altera -L lpm -L sgate -L altera_mf -L altera_lnsim -L cyclonev -L rtl_w
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     add wave -group tb1 sim:/tb1/*
-    add wave -group tb1 sim:/tb1/aoc/*
+    add wave -group tb1 sim:/tb1/aoc/uart_clk
 }
 
-run 20000 ns
+run {3000 ns}
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     view structure
