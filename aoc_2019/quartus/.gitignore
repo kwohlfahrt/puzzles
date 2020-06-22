@@ -1,6 +1,9 @@
-# outputs of qsys-generate
-uart_clk_pll/
-uart_clk_pll.sopcinfo
+# unused outputs of megawizard
+*.bsf
+*.f
+*.cmp
+*.ppf
+*.spd
 # outputs of quartus_*
 db/
 incremental_db/

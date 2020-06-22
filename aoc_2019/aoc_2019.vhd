@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart;
+library uart_pll;
 
 entity aoc_2019 is
 	port ( switches : in std_logic_vector(9 downto 0);
@@ -28,8 +29,8 @@ begin
           leds_red(i) <= switches(i);
         end generate;
         leds_green <= checksum;
-        uart_pll : entity work.uart_clk_pll
-                port map ( refclk_clk => oscillator, reset_reset => '0', outclk_clk => uart_clk );
+        uart_clk_src : entity uart_pll.uart_pll
+                port map ( refclk => oscillator, rst => '0', outclk_1 => uart_clk );
         uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, valid => uart_valid, ready => uart_ready );
         uart_trans : entity uart.tx generic map ( bit_clocks => 15 )
