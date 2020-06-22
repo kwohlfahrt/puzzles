@@ -1,9 +1,10 @@
 set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name BOARD "Cyclone V GX Starter Kit"
 set_global_assignment -name DEVICE 5CGXFC5C6F27C7
 set_global_assignment -name TOP_LEVEL_ENTITY aoc_2019
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 19.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:06:49  DECEMBER 14, 2019"
-set_global_assignment -name LAST_QUARTUS_VERSION "19.1.0 Lite Edition"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.1.0 Lite Edition"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name VHDL_INPUT_VERSION VHDL_2008
 set_global_assignment -name VHDL_SHOW_LMF_MAPPING_MESSAGES OFF
@@ -24,6 +25,8 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name PROJECT_IP_REGENERATION_POLICY ALWAYS_REGENERATE_IP
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
 # I/O
 set_location_assignment PIN_AC9 -to switches[0]
@@ -91,16 +94,12 @@ set_location_assignment PIN_Y16 -to buttons[3]
 set_location_assignment PIN_R20 -to oscillator
 
 # Sources
-
 set_global_assignment -name VHDL_FILE ../uart/common.vhd -library uart
 set_global_assignment -name VHDL_FILE ../uart/rx.vhd -library uart
 set_global_assignment -name VHDL_FILE ../uart/tx.vhd -library uart
-
 set_global_assignment -name VHDL_FILE "../seven-segment.vhd"
 set_global_assignment -name VHDL_FILE ../aoc_2019.vhd
 set_global_assignment -name VHDL_FILE ../parser.vhd
 set_global_assignment -name SDC_FILE aoc_2019.sdc
-
 set_global_assignment -name QIP_FILE uart_pll.qip
 set_global_assignment -name SIP_FILE uart_pll.sip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

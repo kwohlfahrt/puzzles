@@ -1,8 +1,8 @@
 --IP Functional Simulation Model
---VERSION_BEGIN 19.1 cbx_mgl 2019:09:22:09:26:20:SJ cbx_simgen 2019:09:22:08:02:34:SJ  VERSION_END
+--VERSION_BEGIN 20.1 cbx_mgl 2020:06:05:13:25:21:SJ cbx_simgen 2020:06:05:12:04:24:SJ  VERSION_END
 
 
--- Copyright (C) 2019  Intel Corporation. All rights reserved.
+-- Copyright (C) 2020  Intel Corporation. All rights reserved.
 -- Your use of Intel Corporation's design tools, logic functions 
 -- and other software and tools, and any partner logic 
 -- functions, and any output files from any of the foregoing 
