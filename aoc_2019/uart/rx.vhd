@@ -19,7 +19,7 @@ end;
 architecture structure of rx is
   -- Quartus does not support 'subtype annotation
   subtype phase_t is natural range 1 to bit_clocks;
-  subtype data_idx_t is natural range output'right to output'left;
+  subtype data_idx_t is natural range output'reverse_range;
   subtype stop_idx_t is natural range 1 to n_stop_bits;
 
   signal state : state_t := start_bit;
@@ -28,34 +28,20 @@ architecture structure of rx is
   signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
-  signal sample : boolean;
-  signal data_idx : data_idx_t := data_idx_t'high;
+  signal data_idx : data_idx_t := data_idx_t'left;
   signal stop_idx : stop_idx_t := stop_idx_t'low;
   signal data_samples : std_logic_vector(output'range);
   signal stop_sample : std_logic;
   signal start_sample : std_logic;
 begin
   idle <= start_toggle = done_toggle;
-  sample <= phase = (phase_t'high + 1) / 2;
 
-  process (sample)
+  process (clk, idle)
   begin
-    -- should be rising_edge, but Quartus :(
-    if (sample'event and sample) then
-      if state = start_bit then
-        start_sample <= rx;
-      elsif state = data then
-        data_samples(data_idx) <= rx;
-      elsif state = stop_bits then
-        stop_sample <= rx;
+    if rising_edge(clk) and idle then
+      if not rx then
+        start_toggle <= not start_toggle;
       end if;
-    end if;
-  end process;
-
-  process (rx, idle)
-  begin
-    if falling_edge(rx) and idle then
-      start_toggle <= not start_toggle;
     end if;
   end process;
 
@@ -72,6 +58,14 @@ begin
         phase <= phase_t'succ(phase);
       end if;
 
+      if phase = (phase_t'high + 1) / 2 then
+        case state is
+          when start_bit => start_sample <= rx;
+          when data => data_samples(data_idx) <= rx;
+          when stop_bits => stop_sample <= rx;
+        end case;
+      end if;
+
       if phase = phase_t'high then
         case state is
           when start_bit =>
@@ -83,11 +77,11 @@ begin
               state <= data;
             end if;
           when data =>
-            if data_idx = data_idx_t'low then
-              data_idx <= data_idx_t'high;
+            if data_idx = data_idx_t'right then
+              data_idx <= data_idx_t'left;
               state <= stop_bits;
             else
-              data_idx <= data_idx_t'pred(data_idx);
+              data_idx <= data_idx_t'rightof(data_idx);
             end if;
           when stop_bits =>
             if stop_sample /= '1' then

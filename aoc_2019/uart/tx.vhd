@@ -18,7 +18,7 @@ end;
 architecture structure of tx is
   -- Quartus does not support 'subtype annotation
   subtype phase_t is natural range 1 to bit_clocks;
-  subtype data_idx_t is natural range input'right to input'left;
+  subtype data_idx_t is natural range input'reverse_range;
   subtype stop_idx_t is natural range 1 to n_stop_bits;
 
   signal state : state_t := start_bit;
@@ -26,7 +26,7 @@ architecture structure of tx is
   signal start_toggle, done_toggle : boolean := false;
 
   signal buf : std_logic_vector(input'range);
-  signal data_idx : data_idx_t := data_idx_t'high;
+  signal data_idx : data_idx_t := data_idx_t'left;
   signal stop_idx : stop_idx_t := stop_idx_t'low;
   signal idle : boolean := true;
   signal tx_sample : std_logic;
@@ -70,11 +70,11 @@ begin
           when start_bit =>
             state <= data;
           when data =>
-            if data_idx = data_idx_t'low then
-              data_idx <= data_idx_t'high;
+            if data_idx = data_idx_t'right then
+              data_idx <= data_idx_t'left;
               state <= stop_bits;
             else
-              data_idx <= data_idx_t'pred(data_idx);
+              data_idx <= data_idx_t'rightof(data_idx);
             end if;
           when stop_bits =>
             if stop_idx = stop_idx_t'high then

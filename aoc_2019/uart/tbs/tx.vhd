@@ -49,7 +49,7 @@ begin
       wait for bit_clocks * 8 * period / 10;
       assert tx = '0';
       wait for bit_clocks * period / 10;
-      for j in examples(i)'range loop
+      for j in examples(i)'reverse_range loop
         wait for bit_clocks * period / 10;
         assert tx = examples(i)(j);
         wait for bit_clocks * 8 * period / 10;
@@ -123,8 +123,7 @@ begin
 
   process
   begin
-    wait for bit_clocks * 2 * period;
-    wait for bit_clocks * period / 10;
+    wait for bit_clocks * 3 * period;
 
     for i in examples'range loop
       wait for bit_clocks * 10 * period;

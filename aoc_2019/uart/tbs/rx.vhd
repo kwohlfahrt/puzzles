@@ -31,7 +31,7 @@ begin
     for i in examples'range loop
       rx <= '0';
       wait for bit_clocks * period;
-      for j in examples(i)'range loop
+      for j in examples(i)'reverse_range loop
         rx <= examples(i)(j);
         wait for bit_clocks * period;
       end loop;
@@ -176,7 +176,7 @@ begin
     for i in examples'range loop
       input <= '0';
       wait for bit_clocks * period;
-      for j in examples(i)'range loop
+      for j in examples(i)'reverse_range loop
         input <= examples(i)(j);
         wait for bit_clocks * period;
       end loop;
@@ -197,7 +197,7 @@ begin
     for i in examples'range loop
       wait for bit_clocks * period / 2;
       assert output = '0';
-      for j in examples(i)'range loop
+      for j in examples(i)'reverse_range loop
         wait for bit_clocks * period;
         assert output = examples(i)(j);
       end loop;
