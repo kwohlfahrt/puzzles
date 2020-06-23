@@ -14,7 +14,7 @@ if { !([info exists HEADLESS] && !$HEADLESS) } {
     add wave -group tb1 sim:/tb1/aoc/uart_clk
 }
 
-run {3000 ns}
+run {300 us}
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     view structure

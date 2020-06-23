@@ -20,6 +20,11 @@ architecture structure of tb1 is
   -- internal
   signal done : boolean := false;
   constant period : time := 20 ns;
+  constant uart_period : time := 1 sec / 115200;
+
+  type data_t is array (natural range <>) of std_logic_vector(7 downto 0);
+  -- ASCII "23,"
+  constant data : data_t := ("00110010", "00110011", "00101100");
 begin
   aoc : entity work.aoc_2019
     port map ( switches => switches, buttons => buttons, oscillator => oscillator, reset => reset, uart_rx => uart_rx,
@@ -29,8 +34,28 @@ begin
   begin
     wait for 10 ns;
     reset <= '0';
-    wait for 3000 ns;
+    wait for 2 us;
+
+    for i in data'range loop
+      uart_rx <= '0';
+      wait for uart_period;
+      for j in data(i)'reverse_range loop
+        uart_rx <= data(i)(j);
+        wait for uart_period;
+      end loop;
+      uart_rx <= '1';
+      wait for uart_period;
+    end loop;
+    wait for 2 * uart_period;
     done <= true;
+    wait;
+  end process;
+
+  process
+    alias value is << signal .tb1.aoc.value : unsigned(13 downto 0) >>;
+  begin
+    wait until done = true;
+    assert value = to_unsigned(23, value'length);
     wait;
   end process;
 

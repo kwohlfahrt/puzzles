@@ -3,5 +3,6 @@
 set HEADLESS 1
 do ./uart_rx.do
 do ./uart_tx.do
+do ./parser.do
 do ./aoc_2019.do
 quit
