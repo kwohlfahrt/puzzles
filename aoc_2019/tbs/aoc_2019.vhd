@@ -9,7 +9,8 @@ architecture structure of tb1 is
   --input
   signal switches : std_logic_vector(9 downto 0) := "0000000000";
   signal buttons : std_logic_vector(0 to 3) := "0000";
-  signal oscillator, reset, uart_rx : std_logic := '1';
+  signal oscillator, uart_rx : std_logic := '1';
+  signal reset : std_logic := '0';
 
   -- output
   signal seven_segments : std_logic_vector(0 to 7 * 4 - 1);
@@ -27,13 +28,13 @@ architecture structure of tb1 is
   constant data : data_t := ("00110010", "00110011", "00101100");
 begin
   aoc : entity work.aoc_2019
-    port map ( switches => switches, buttons => buttons, oscillator => oscillator, reset => reset, uart_rx => uart_rx,
+    port map ( switches => switches, buttons => buttons, oscillator => oscillator, reset_button => reset, uart_rx => uart_rx,
                seven_segments => seven_segments, leds_red => leds_red, leds_green => leds_green, uart_tx => uart_tx );
 
   process
   begin
     wait for 10 ns;
-    reset <= '0';
+    reset <= '1';
     wait for 2 us;
 
     for i in data'range loop
