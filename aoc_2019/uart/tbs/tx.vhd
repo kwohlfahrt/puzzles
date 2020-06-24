@@ -38,8 +38,8 @@ begin
   end process;
 
   process
-    alias state is << signal .tb1.uart_tx.state : uart.util.state_t >>;
-    alias phase is << signal .tb1.uart_tx.phase : natural range 1 to bit_clocks >>;
+    alias state is << signal uart_tx.state : uart.util.state_t >>;
+    alias phase is << signal uart_tx.phase : natural range 1 to bit_clocks >>;
   begin
     wait for bit_clocks * 2 * period;
 

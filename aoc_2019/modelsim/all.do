@@ -1,8 +1,7 @@
 # Can't make the TCL version of 'vsim -do' work
 
 set HEADLESS 1
-do ./uart_rx.do
-do ./uart_tx.do
-do ./parser.do
+do ./uart.do
+do ./int_io.do
 do ./aoc_2019.do
 quit

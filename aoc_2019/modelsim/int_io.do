@@ -4,7 +4,7 @@ vcom -2008 -work int_io {../int_io/*.vhd}
 vlib int_io_tb
 vcom -2008 -work int_io_tb {../int_io/tbs/*.vhd}
 
-vsim -L int_io -L int_io_tb -voptargs="+acc" int_io_tb.tb1
+vsim -voptargs="+acc" int_io_tb.tb1
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     add wave -group tb1 sim:/tb1/*
