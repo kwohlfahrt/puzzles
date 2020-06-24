@@ -1,7 +1,10 @@
-vlib parser_tb
-vcom -2008 -work parser_tb {../parser.vhd} {../tbs/parser.vhd}
+vlib int_io
+vcom -2008 -work int_io {../int_io/*.vhd}
 
-vsim -L parser_tb -voptargs="+acc" parser_tb.tb1
+vlib int_io_tb
+vcom -2008 -work int_io_tb {../int_io/tbs/*.vhd}
+
+vsim -L int_io -L int_io_tb -voptargs="+acc" int_io_tb.tb1
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     add wave -group tb1 sim:/tb1/*

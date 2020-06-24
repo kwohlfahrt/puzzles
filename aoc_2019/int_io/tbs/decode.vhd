@@ -2,6 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library int_io;
+
 entity tb1 is
 end;
 
@@ -19,7 +21,7 @@ architecture structure of tb1 is
   signal done : boolean := false;
   constant period : time := 1 ns;
 begin
-  parser : entity work.int_parser generic map ( value_size => output'length )
+  parser : entity int_io.decode generic map ( value_size => output'length )
     port map ( clk => clk, byte => input, byte_valid => byte_valid, byte_ready => byte_ready,
                value => output, value_valid => value_valid, value_ready => value_ready );
   process

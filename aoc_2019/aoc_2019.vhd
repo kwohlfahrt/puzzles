@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library int_io;
 library uart;
 library uart_pll;
 
@@ -36,7 +37,7 @@ begin
                 port map ( refclk => oscillator, rst => reset, outclk_1 => uart_clk );
         uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, valid => uart_valid, ready => uart_ready );
-        parser : entity work.int_parser generic map ( value_size => value'length )
+        parser : entity int_io.decode generic map ( value_size => value'length )
                 port map ( clk => uart_clk, byte => uart_data, byte_valid => uart_valid, byte_ready => uart_ready,
                            value => value, value_valid => value_valid, value_ready => '1' );
         uart_trans : entity uart.tx generic map ( bit_clocks => 15 )

@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity int_parser is
+entity decode is
   generic ( value_size : positive := 8 );
   port ( clk : in std_logic;
          byte : in std_logic_vector(7 downto 0);
@@ -13,7 +13,7 @@ entity int_parser is
          value_ready : in std_logic );
 end entity;
 
-architecture structure of int_parser is
+architecture structure of decode is
   signal acc : unsigned(value'range) := (others => '0');
   signal valid_toggle : boolean := false;
   signal consumed_toggle : boolean := true;
