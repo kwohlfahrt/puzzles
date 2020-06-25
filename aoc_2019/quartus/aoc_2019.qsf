@@ -96,6 +96,7 @@ set_location_assignment PIN_R20 -to oscillator
 set_global_assignment -name VHDL_FILE ../uart/common.vhd -library uart
 set_global_assignment -name VHDL_FILE ../uart/rx.vhd -library uart
 set_global_assignment -name VHDL_FILE ../uart/tx.vhd -library uart
+set_global_assignment -name VHDL_FILE ../bcd.vhd -library bcd
 set_global_assignment -name VHDL_FILE "../seven-segment.vhd"
 set_global_assignment -name VHDL_FILE ../aoc_2019.vhd
 set_global_assignment -name VHDL_FILE ../int_io/decode.vhd -library int_io
