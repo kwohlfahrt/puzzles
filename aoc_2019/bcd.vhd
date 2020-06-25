@@ -9,6 +9,10 @@ package bcd is
   -- pragma translate_off
   function to_string( value : decimal ) return string;
   -- pragma translate_on
+  function clz( value : decimal ) return natural;
+  function "sll"( value : decimal; amount: integer ) return decimal;
+  function "srl"( value : decimal; amount: integer ) return decimal;
+
   function to_decimal( value : unsigned; size : natural ) return decimal;
   function to_decimal( value : integer; size : natural ) return decimal;
   function to_unsigned( value : decimal; size : natural ) return unsigned;
@@ -31,6 +35,37 @@ package body bcd is
     return result;
   end function;
   -- pragma translate_on
+
+  function clz( value : decimal ) return natural is
+    alias x_value : decimal(0 to value'length - 1) is value;
+  begin
+    for j in x_value'range loop
+      if x_value(j) /= 0 then
+        return j;
+      end if;
+    end loop;
+    return value'length;
+  end function;
+
+  function "sll"( value : decimal; amount: integer ) return decimal is
+    variable result : decimal(value'range) := (others => "0000");
+
+    alias x_value : decimal(value'length - 1 downto 0) is value;
+    alias x_result : decimal(result'length - 1 downto 0) is result;
+  begin
+    x_result(x_value'left downto amount) := x_value(x_value'left - amount downto 0);
+    return result;
+  end function;
+
+  function "srl"( value : decimal; amount: integer ) return decimal is
+    variable result : decimal(value'range) := (others => "0000");
+
+    alias x_value : decimal(value'length - 1 downto 0) is value;
+    alias x_result : decimal(result'length - 1 downto 0) is result;
+  begin
+    x_result(x_value'left - amount downto 0) := x_value(x_value'left downto amount);
+    return result;
+  end function;
 
   function to_decimal( value : unsigned; size : natural ) return decimal is
     variable acc : unsigned(value'range) := value;
