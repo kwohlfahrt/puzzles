@@ -10,6 +10,7 @@ package bcd is
   function to_string( value : decimal ) return string;
   -- pragma translate_on
   function to_decimal( value : unsigned; size : natural ) return decimal;
+  function to_decimal( value : integer; size : natural ) return decimal;
   function to_unsigned( value : decimal; size : natural ) return unsigned;
 end;
 
@@ -44,6 +45,17 @@ package body bcd is
       end loop;
       result(result'right) := result(result'right)(2 downto 0) & acc(acc'left);
       acc := acc sll 1;
+    end loop;
+    return result;
+  end function;
+
+  function to_decimal( value : integer; size : natural ) return decimal is
+    variable acc : integer := value;
+    variable result : decimal(size - 1 downto 0) := (others => "0000");
+  begin
+    for j in result'right to result'left loop
+      result(j) := to_unsigned(acc mod 10, result(j)'length);
+      acc := acc / 10;
     end loop;
     return result;
   end function;

@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library bcd;
+use bcd.bcd.all;
+
 library int_io;
 
 entity tb1 is
@@ -11,7 +14,7 @@ architecture structure of tb1 is
 
   signal clk : std_logic := '1';
   signal input : std_logic_vector(7 downto 0) := "00000000";
-  signal output : unsigned(15 downto 0);
+  signal output : decimal(1 downto 0);
 
   signal byte_ready, value_valid : std_logic;
   signal byte_valid : std_logic := '0';
@@ -45,10 +48,10 @@ begin
     wait for 3 * period;
     assert value_valid = '0';
     wait for period;
-    assert output = 23;
+    assert output = to_decimal(23, 2);
     assert value_valid = '1';
     wait for period;
-    assert output = 23;
+    assert output = to_decimal(23, 2);
     assert value_valid = '0';
     wait;
   end process;

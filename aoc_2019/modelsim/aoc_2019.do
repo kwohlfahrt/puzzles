@@ -4,6 +4,9 @@ vcom -2008 -work uart_pll {../quartus/uart_pll_sim/uart_pll.vho}
 vlib uart
 vcom -2008 -work uart {../uart/*.vhd}
 
+vlib bcd
+vcom -2008 -work bcd {../bcd.vhd}
+
 vlib int_io
 vcom -2008 -work uart {../int_io/*.vhd}
 

@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library bcd;
+use bcd.bcd.all;
+
 entity tb1 is
 end;
 
@@ -53,10 +56,10 @@ begin
   end process;
 
   process
-    alias value is << signal .tb1.aoc.value : unsigned(13 downto 0) >>;
+    alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
   begin
     wait until done = true;
-    assert value = to_unsigned(23, value'length);
+    assert value = to_decimal(23, value'length);
     wait;
   end process;
 

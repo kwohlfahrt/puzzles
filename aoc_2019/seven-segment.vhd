@@ -26,9 +26,12 @@ use ieee.std_logic_1164.all;
 use ieee.math_real.log2;
 use ieee.numeric_std.all;
 
+library bcd;
+use bcd.bcd.all;
+
 entity seven_segments_dec is
 	generic ( n : positive );
-	port (value : in unsigned(natural(log2(10.0**n)) downto 0);
+	port (value : in decimal(n - 1 downto 0);
 	      output : out std_logic_vector(0 to n * 7 - 1));
 end;
 
@@ -40,6 +43,6 @@ architecture structural of seven_segments_dec is
 	                            "0000000", "0000100");
 begin
 	gen_display : for i in 0 to n - 1 generate
-		output(i * 7 to i * 7 + 6) <= patterns(to_integer(value / (10 ** i) mod 10));
+		output(i * 7 to i * 7 + 6) <= patterns(to_integer(value(i)));
 	end generate;
 end;
