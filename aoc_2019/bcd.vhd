@@ -49,21 +49,39 @@ package body bcd is
 
   function "sll"( value : decimal; amount: integer ) return decimal is
     variable result : decimal(value'range) := (others => "0000");
+    variable temp : unsigned(value'length * 4 - 1 downto 0);
 
     alias x_value : decimal(value'length - 1 downto 0) is value;
     alias x_result : decimal(result'length - 1 downto 0) is result;
   begin
-    x_result(x_value'left downto amount) := x_value(x_value'left - amount downto 0);
+    for i in x_value'range loop
+      temp(i * 4 + 3 downto i * 4) := x_value(i);
+    end loop;
+
+    temp := temp sll amount * 4;
+
+    for i in x_result'range loop
+      x_result(i) := temp(i * 4 + 3 downto i * 4);
+    end loop;
     return result;
   end function;
 
   function "srl"( value : decimal; amount: integer ) return decimal is
     variable result : decimal(value'range) := (others => "0000");
+    variable temp : unsigned(value'length * 4 - 1 downto 0);
 
     alias x_value : decimal(value'length - 1 downto 0) is value;
     alias x_result : decimal(result'length - 1 downto 0) is result;
   begin
-    x_result(x_value'left - amount downto 0) := x_value(x_value'left downto amount);
+    for i in x_value'range loop
+      temp(i * 4 + 3 downto i * 4) := x_value(i);
+    end loop;
+
+    temp := temp srl amount * 4;
+
+    for i in x_result'range loop
+      x_result(i) := temp(i * 4 + 3 downto i * 4);
+    end loop;
     return result;
   end function;
 
