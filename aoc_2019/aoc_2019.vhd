@@ -22,8 +22,11 @@ entity aoc_2019 is
 end;
 
 architecture data of aoc_2019 is
-	signal reset, uart_clk, uart_valid, uart_ready, value_valid : std_logic;
-	signal uart_data : std_logic_vector(7 downto 0);
+	signal reset, uart_clk,
+          uart_in_valid, uart_in_ready,
+          uart_out_valid, uart_out_ready,
+          dec_value_valid, dec_value_ready : std_logic;
+	signal uart_in, uart_out : std_logic_vector(7 downto 0);
 	signal dec_value : decimal(3 downto 0);
 begin
         reset <= not reset_button;
@@ -39,12 +42,15 @@ begin
         uart_clk_src : entity uart_pll.uart_pll
                 port map ( refclk => oscillator, rst => reset, outclk_1 => uart_clk );
         uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
-		port map ( rx => uart_rx, clk => uart_clk, output => uart_data, valid => uart_valid, ready => uart_ready );
+		port map ( rx => uart_rx, clk => uart_clk, output => uart_in, valid => uart_in_valid, ready => uart_in_ready );
         decoder : entity int_io.decode generic map ( value_size => dec_value'length )
-                port map ( clk => uart_clk, byte => uart_data, byte_valid => uart_valid, byte_ready => uart_ready,
-                           value => dec_value, value_valid => value_valid, value_ready => '1' );
+                port map ( clk => uart_clk, byte => uart_in, byte_valid => uart_in_valid, byte_ready => uart_in_ready,
+                           value => dec_value, value_valid => dec_value_valid, value_ready => dec_value_ready );
+        encoder : entity int_io.encode generic map ( value_size => dec_value'length )
+                port map ( clk => uart_clk, byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready,
+                           value => dec_value, value_valid => dec_value_valid, value_ready => dec_value_ready );
         uart_trans : entity uart.tx generic map ( bit_clocks => 15 )
-		port map ( tx => uart_tx, clk => uart_clk, input => uart_data, valid => '0', ready => open);
+		port map ( tx => uart_tx, clk => uart_clk, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
 	display : entity work.seven_segments_dec generic map ( n => 4 )
 		port map ( value => dec_value, output => seven_segments );
 end;

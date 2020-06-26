@@ -50,16 +50,33 @@ begin
       uart_rx <= '1';
       wait for uart_period;
     end loop;
-    wait for 2 * uart_period;
-    done <= true;
     wait;
   end process;
 
   process
     alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
   begin
-    wait until done = true;
+    wait until value'active;
     assert value = to_decimal(23, value'length);
+    wait;
+  end process;
+
+  process
+    alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
+  begin
+    wait for uart_period * 10 * 3;
+    wait for uart_period / 2;
+    for i in data'range loop
+      assert uart_tx = '0';
+      wait for uart_period;
+      for j in data(i)'reverse_range loop
+        assert uart_tx = data(i)(j) report to_string(uart_tx) & " /= " & to_string(data(i)(j));
+        wait for uart_period;
+      end loop;
+      assert uart_tx = '1';
+      wait for uart_period;
+    end loop;
+    done <= true;
     wait;
   end process;
 
