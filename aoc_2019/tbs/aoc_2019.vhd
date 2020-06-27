@@ -5,6 +5,8 @@ use ieee.numeric_std.all;
 library bcd;
 use bcd.bcd.all;
 
+use work.seven_segments.seven_segments;
+
 entity tb1 is
 end;
 
@@ -16,7 +18,7 @@ architecture structure of tb1 is
   signal reset : std_logic := '0';
 
   -- output
-  signal seven_segments : std_logic_vector(0 to 7 * 4 - 1);
+  signal seven_segments : seven_segments(3 downto 0);
   signal leds_red : std_logic_vector(0 to 9);
   signal leds_green : std_logic_vector(0 to 7);
   signal uart_tx : std_logic;
@@ -56,8 +58,12 @@ begin
   process
     alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
   begin
+    wait for 1 ns;
+    assert seven_segments = ( "0000001", "0000001", "0000001", "0000001" );
     wait until value'active;
     assert value = to_decimal(23, value'length);
+    wait until done;
+    assert seven_segments = ( "0000001", "0000001", "0010010", "0000110" );
     wait;
   end process;
 
