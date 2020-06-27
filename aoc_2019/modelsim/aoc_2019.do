@@ -11,7 +11,7 @@ vlib int_io
 vcom -2008 -work uart {../int_io/*.vhd}
 
 vlib aoc_2019_tb
-vcom -2008 -work aoc_2019_tb {../seven-segment.vhd} {../aoc_2019.vhd} {../tbs/aoc_2019.vhd}
+vcom -2008 -work aoc_2019_tb {../seven-segment.vhd} {../reset.vhd} {../aoc_2019.vhd} {../tbs/aoc_2019.vhd}
 
 vsim -L altera_lnsim -L cyclonev -voptargs="+acc" aoc_2019_tb.tb1
 

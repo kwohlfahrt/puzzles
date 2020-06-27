@@ -8,6 +8,7 @@ use bcd.bcd.all;
 entity encode is
   generic ( value_size : positive );
   port ( clk : in std_logic;
+         reset : in std_logic := '0';
          value : in decimal(value_size - 1 downto 0);
          value_valid : in std_logic;
          value_ready : buffer std_logic;
@@ -32,21 +33,24 @@ begin
   byte_valid <= '1' when valid_toggle = consumed_toggle else '0';
   value_ready <= '1' when ndigits = 0 and byte_ready = '1' else '0';
 
-  process (clk)
+  process (clk, reset)
   begin
-    if rising_edge(clk) and byte_valid = '1' and byte_ready = '1' then
-      consumed_toggle <= not consumed_toggle;
-    end if;
+    if reset = '1' then
+    elsif rising_edge(clk) then
+      if byte_valid = '1' and byte_ready = '1' then
+        consumed_toggle <= not consumed_toggle;
+      end if;
 
-    if rising_edge(clk) and byte_ready = '1' then
-      if value_ready and value_valid then
-        acc <= value sll clz(value);
-        ndigits <= value_size - clz(value);
-        valid_toggle <= not valid_toggle;
-      elsif ndigits > 0 then
-        acc <= acc sll 1;
-        ndigits <= ndigits - 1;
-        valid_toggle <= not valid_toggle;
+      if byte_ready = '1' then
+        if value_ready and value_valid then
+          acc <= value sll clz(value);
+          ndigits <= value_size - clz(value);
+          valid_toggle <= not valid_toggle;
+        elsif ndigits > 0 then
+          acc <= acc sll 1;
+          ndigits <= ndigits - 1;
+          valid_toggle <= not valid_toggle;
+        end if;
       end if;
     end if;
   end process;

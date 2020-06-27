@@ -8,10 +8,11 @@ use bcd.bcd.all;
 entity decode is
   generic ( value_size : positive );
   port ( clk : in std_logic;
+         reset : in std_logic := '0';
          byte : in std_logic_vector(7 downto 0);
          byte_valid : in std_logic;
          byte_ready : out std_logic := '1';
-         value : out decimal(value_size - 1 downto 0);
+         value : out decimal(value_size - 1 downto 0) := (others => "0000");
          value_valid : out std_logic := '0';
          value_ready : in std_logic );
 end entity;
@@ -30,21 +31,28 @@ begin
   byte_value <= unsigned(byte);
   value_valid <= '1' when valid_toggle = consumed_toggle else '0';
 
-  process (clk)
+  process (clk, reset)
   begin
-    if rising_edge(clk) and value_valid = '1' and value_ready = '1' then
-      consumed_toggle <= not consumed_toggle;
-    end if;
+    if reset = '1' then
+      valid_toggle <= false;
+      consumed_toggle <= true;
+      acc <= (others => "0000");
+      value <= (others => "0000");
+    elsif rising_edge(clk) then
+      if value_valid = '1' and value_ready = '1' then
+        consumed_toggle <= not consumed_toggle;
+      end if;
 
-    if rising_edge(clk) and byte_valid = '1' then
-      if byte_value = sep then
-        value <= acc;
-        acc <= (others => "0000");
-        if not value_valid then
-          valid_toggle <= not valid_toggle;
+      if byte_valid = '1' then
+        if byte_value = sep then
+          value <= acc;
+          acc <= (others => "0000");
+          if not value_valid then
+            valid_toggle <= not valid_toggle;
+          end if;
+        else
+          acc <= acc(acc'left - 1 downto acc'right) & resize(byte_value, acc(0)'length);
         end if;
-      else
-        acc <= acc(acc'left - 1 downto acc'right) & resize(byte_value, acc(0)'length);
       end if;
     end if;
   end process;
