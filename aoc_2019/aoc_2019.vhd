@@ -9,11 +9,13 @@ library int_io;
 library uart;
 library uart_pll;
 
+use work.seven_segments.seven_segments;
+
 entity aoc_2019 is
 	port ( switches : in std_logic_vector(9 downto 0);
 	       buttons : in std_logic_vector(0 to 3);
 	       reset_button : in std_logic;
-	       seven_segments : out std_logic_vector(0 to 7 * 4 - 1);
+	       seven_segments : out seven_segments(1 to 4);
 	       leds_red : out std_logic_vector(0 to 9);
 	       leds_green : out std_logic_vector(0 to 7);
                oscillator : in std_logic;
