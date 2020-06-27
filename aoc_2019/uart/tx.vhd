@@ -6,6 +6,7 @@ use work.util.all;
 
 entity tx is
   generic ( bit_clocks : positive;
+            -- TODO: Add slack like rx
             n_stop_bits : natural range 1 to 2 := 1;
             parity_type : parity_t := none );
   port ( clk : in std_logic;

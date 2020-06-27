@@ -5,8 +5,8 @@ use ieee.numeric_std.all;
 use work.util.all;
 
 entity rx is
-  -- FIXME: There is a timing issue - only works with 2 stop bits (+cstopb)
   generic ( bit_clocks : positive;
+            stop_slack : natural := 0;
             parity_type : parity_t := none;
             n_stop_bits : positive range 1 to 2 := 1 );
   port ( clk : in std_logic;
@@ -24,6 +24,7 @@ architecture structure of rx is
 
   signal state : state_t := start_bit;
   signal phase : phase_t := phase_t'low;
+  signal nphases : phase_t;
   signal start_toggle, done_toggle : boolean := false;
   signal err : boolean := true; -- Nothing received
 
@@ -35,6 +36,9 @@ architecture structure of rx is
   signal start_sample : std_logic;
 begin
   idle <= start_toggle = done_toggle;
+  with state select nphases <=
+    phase_t'high - stop_slack when stop_bits,
+    phase_t'high when others;
 
   process (clk, idle)
   begin
@@ -52,7 +56,7 @@ begin
     end if;
 
     if rising_edge(clk) and not idle then
-      if phase = phase_t'high then
+      if phase = nphases then
         phase <= phase_t'low;
       else
         phase <= phase_t'succ(phase);
@@ -66,7 +70,7 @@ begin
         end case;
       end if;
 
-      if phase = phase_t'high then
+      if phase = nphases then
         case state is
           when start_bit =>
             if start_sample /= '0' then
