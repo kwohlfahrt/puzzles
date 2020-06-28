@@ -5,5 +5,6 @@ do ./uart.do
 do ./bcd.do
 do ./int_io.do
 do ./seven-segment.do
+do ./day1.do
 do ./aoc_2019.do
 quit
