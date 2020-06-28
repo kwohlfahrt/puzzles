@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart;
-use uart.util."=";
+use uart.util.all;
 
 entity tb1 is
 end tb1;
@@ -25,15 +25,14 @@ begin
     port map ( tx => tx, clk => clk, input => input, valid => valid, ready => ready );
   process
   begin
-    wait for bit_clocks * 2 * period;
+    wait for period / 4;
 
+    valid <= '1';
     for i in examples'range loop
       input <= examples(i);
-      valid <= '1';
-      wait for bit_clocks * 9 * period;
-      valid <= '0';
-      wait for bit_clocks * period;
+      wait for bit_clocks * 10 * period;
     end loop;
+    valid <= '0';
     wait;
   end process;
 
@@ -41,10 +40,8 @@ begin
     alias state is << signal uart_tx.state : uart.util.state_t >>;
     alias phase is << signal uart_tx.phase : natural range 1 to bit_clocks >>;
   begin
-    wait for bit_clocks * 2 * period;
-
     for i in examples'range loop
-      wait for bit_clocks * period / 10;
+      wait for period + period / 4;
       assert tx = '0';
       wait for bit_clocks * 8 * period / 10;
       assert tx = '0';
@@ -64,7 +61,7 @@ begin
     end loop;
     -- assert we are ready for next byte
     wait for bit_clocks * period;
-    assert state = state'subtype'left;
+    assert state = start_bit;
     assert phase = phase'subtype'low;
     report "end of test";
     done <= true;

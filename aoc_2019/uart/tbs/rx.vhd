@@ -25,8 +25,7 @@ begin
   -- stimulus
   process
   begin
-    rx <= '1';
-    wait for bit_clocks * 2 * period;
+    wait for period / 4;
 
     for i in examples'range loop
       rx <= '0';
@@ -44,16 +43,13 @@ begin
   -- monitor
   process
   begin
-    -- warm-up
-    wait for bit_clocks * 2 * period;
+    wait for period;
     -- first cycle
     wait for bit_clocks * 10 * period;
-    -- offset
-    wait for period / 10;
 
     for i in examples'range loop
-      assert output = examples(i);
-      assert valid = '1';
+      assert output = examples(i) report to_string(output) & " /= " & to_string(examples(i));
+      assert valid = '1' report "valid /= '1'";
       wait for bit_clocks * 10 * period;
     end loop;
 
@@ -95,8 +91,7 @@ begin
     port map ( rx => rx, clk => clk, output => output, valid => valid, ready => '1' );
   process
   begin
-    rx <= '1';
-    wait for bit_clocks * 2 * period;
+    wait for period / 4;
     -- 'start' glitch
     rx <= '0';
     wait for (bit_clocks / 2 - 1) * period;
@@ -123,7 +118,6 @@ begin
     wait for bit_clocks * period;
     rx <= '1';
     wait for bit_clocks * 9 * period;
-    wait for 1 * period;
     assert valid = '1';
 
     report "end of test";

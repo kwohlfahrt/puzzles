@@ -46,7 +46,7 @@ begin
         reset_synchronizer : entity work.synchronizer
                 port map ( clk => uart_clk, async_reset => reset, sync_reset => uart_reset );
 
-        uart_recv : entity uart.rx generic map ( bit_clocks => 15 )
+        uart_recv : entity uart.rx generic map ( bit_clocks => 15, stop_slack => 1 )
 		port map ( rx => uart_rx, clk => uart_clk, output => uart_in, valid => uart_in_valid, ready => uart_in_ready );
         decoder : entity int_io.decode generic map ( value_size => dec_value'length )
                 port map ( clk => uart_clk, reset => uart_reset,
@@ -56,7 +56,7 @@ begin
                 port map ( clk => uart_clk, reset => uart_reset,
                            byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready,
                            value => dec_value, value_valid => dec_value_valid, value_ready => dec_value_ready );
-        uart_trans : entity uart.tx generic map ( bit_clocks => 15 )
+        uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
 		port map ( tx => uart_tx, clk => uart_clk, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
 	display : entity work.seven_segments_dec generic map ( n => 4 )
 		port map ( value => dec_value, output => seven_segments );
