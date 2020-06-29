@@ -33,12 +33,13 @@ entity counter_upper is
          input_valid : in std_logic; 
          input_ready : out std_logic := '1'; 
          output : out unsigned(size-1 downto 0);
-         output_valid : out std_logic := '1';
+         output_valid : out std_logic := '0';
          output_ready : in std_logic );
 end counter_upper;
 
 architecture behave of counter_upper is
   signal counter : unsigned(size-1 downto 0) := (others => '0');
+  signal new_output : boolean := false;
 begin
   output <= counter;
 
@@ -46,9 +47,18 @@ begin
   begin
     if reset = '1' then
       counter <= to_unsigned(0, counter'length);
+      output_valid <= '0';
     elsif rising_edge(clk) then
+      if new_output then
+        output_valid <= '1';
+      elsif output_ready = '1' then
+        output_valid <= '0';
+      end if;
+
+      new_output <= false;
       if input_valid = '1' then
         counter <= counter + fuel_for(input);
+        new_output <= true;
       end if;
     end if;
   end process;

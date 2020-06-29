@@ -31,6 +31,7 @@ architecture structure of tb1 is
   type data_t is array (natural range <>) of std_logic_vector(7 downto 0);
   -- ASCII "23,"
   constant data : data_t := ("00110010", "00110011", "00101100");
+  constant output : data_t := ("00110101", "00101100");
 begin
   aoc : entity work.aoc_2019
     port map ( switches => switches, buttons => buttons, oscillator => oscillator, reset_button => reset, uart_rx => uart_rx,
@@ -56,7 +57,7 @@ begin
   end process;
 
   process
-    alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
+    alias value is << signal .tb1.aoc.value : decimal(5 downto 0) >>;
   begin
     wait for 1 ns;
     assert seven_segments = ( "0000001", "0000001", "0000001", "0000001" );
@@ -68,15 +69,15 @@ begin
   end process;
 
   process
-    alias value is << signal .tb1.aoc.dec_value : decimal(3 downto 0) >>;
+    alias value is << signal .tb1.aoc.value : decimal(5 downto 0) >>;
   begin
     wait for uart_period * 10 * 3;
     wait for uart_period / 2;
-    for i in data'range loop
+    for i in output'range loop
       assert uart_tx = '0';
       wait for uart_period;
-      for j in data(i)'reverse_range loop
-        assert uart_tx = data(i)(j) report to_string(uart_tx) & " /= " & to_string(data(i)(j));
+      for j in output(i)'reverse_range loop
+        assert uart_tx = output(i)(j) report to_string(uart_tx) & " /= " & to_string(output(i)(j));
         wait for uart_period;
       end loop;
       assert uart_tx = '1';
