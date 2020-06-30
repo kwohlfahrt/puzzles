@@ -78,7 +78,7 @@ begin
         if phase = (phase_t'high + 1) / 2 then
           case state is
             when start_bit => start_sample <= rx;
-            when data => data_samples(data_idx) <= rx; -- TODO: Shift register
+            when data => data_samples <= rx & data_samples(data_samples'left downto 1);
             when parity => parity_sample <= rx;
             when stop_bits => stop_sample <= rx;
           end case;
