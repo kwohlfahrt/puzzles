@@ -6,13 +6,15 @@ library bcd;
 use bcd.bcd.all;
 
 entity decode is
-  generic ( value_size : positive );
+  generic ( value_size : positive;
+            -- ASCII ','
+            sep : unsigned(7 downto 0) := "00101100" );
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          byte : in std_logic_vector(7 downto 0);
          byte_valid : in std_logic;
          byte_ready : out std_logic := '1';
-         value : out decimal(value_size - 1 downto 0) := (others => "0000");
+         value : out decimal(value_size - 1 downto 0);
          value_valid : out std_logic := '0';
          value_ready : in std_logic );
 end entity;
@@ -25,8 +27,6 @@ architecture structure of decode is
 
   -- ASCII '0'
   constant offset : unsigned(byte'range) := "00110000";
-  -- ASCII ','
-  constant sep : unsigned(byte'range) := "00101100";
 begin
   byte_value <= unsigned(byte);
   value_valid <= '1' when valid_toggle = consumed_toggle else '0';

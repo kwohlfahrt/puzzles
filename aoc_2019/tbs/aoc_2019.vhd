@@ -26,64 +26,39 @@ architecture structure of tb1 is
   -- internal
   signal done : boolean := false;
   constant period : time := 20 ns;
-  constant uart_period : time := 1 sec / 115200;
-
-  type data_t is array (natural range <>) of std_logic_vector(7 downto 0);
-  -- ASCII "23,"
-  constant data : data_t := ("00110010", "00110011", "00101100");
-  constant output : data_t := ("00110101", "00101100");
+  constant uart_period : time := 1 sec / (115200 * 15);
 begin
-  aoc : entity work.aoc_2019
-    port map ( switches => switches, buttons => buttons, oscillator => oscillator, reset_button => reset, uart_rx => uart_rx,
-               seven_segments => seven_segments, leds_red => leds_red, leds_green => leds_green, uart_tx => uart_tx );
+  dut : entity work.aoc_2019 port map (
+    switches => switches, buttons => buttons, oscillator => oscillator, reset_button => reset, uart_rx => uart_rx,
+    seven_segments => seven_segments, leds_red => leds_red, leds_green => leds_green, uart_tx => uart_tx
+  );
 
   process
   begin
     wait for 10 ns;
     reset <= '1';
-    wait for 2 us;
-
-    for i in data'range loop
-      uart_rx <= '0';
-      wait for uart_period;
-      for j in data(i)'reverse_range loop
-        uart_rx <= data(i)(j);
-        wait for uart_period;
-      end loop;
-      uart_rx <= '1';
-      wait for uart_period;
-    end loop;
     wait;
   end process;
 
   process
-    alias value is << signal .tb1.aoc.value : decimal(5 downto 0) >>;
+    alias uart_clk is << signal .tb1.dut.uart_clk : std_logic >>;
   begin
-    wait for 1 ns;
-    assert seven_segments = ( "0000001", "0000001", "0000001", "0000001" );
-    wait until value'active;
-    assert value = to_decimal(23, value'length);
-    wait until done;
-    assert seven_segments = ( "0000001", "0000001", "0010010", "0000110" );
-    wait;
-  end process;
-
-  process
-    alias value is << signal .tb1.aoc.value : decimal(5 downto 0) >>;
-  begin
-    wait for uart_period * 10 * 3;
+    wait for 500 ns;
+    -- Check we've stopped after reset
+    assert uart_clk = '0';
     wait for uart_period / 2;
-    for i in output'range loop
-      assert uart_tx = '0';
-      wait for uart_period;
-      for j in output(i)'reverse_range loop
-        assert uart_tx = output(i)(j) report to_string(uart_tx) & " /= " & to_string(output(i)(j));
-        wait for uart_period;
-      end loop;
-      assert uart_tx = '1';
-      wait for uart_period;
+    assert uart_clk = '0';
+
+    wait until uart_clk /= '0';
+
+    for i in 1 to 5 loop
+      assert uart_clk = '1';
+      wait for uart_period / 2;
+      assert uart_clk = '0';
+      wait for uart_period / 2;
     end loop;
     done <= true;
+    report "end of test";
     wait;
   end process;
 

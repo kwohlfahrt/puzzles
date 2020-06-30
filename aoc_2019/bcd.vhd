@@ -89,6 +89,12 @@ package body bcd is
     variable acc : unsigned(value'range) := value;
     variable result : decimal(size - 1 downto 0) := (others => "0000");
   begin
+    -- pragma translate_off
+    if is_x(value) then
+      return result;
+    end if;
+    -- pragma translate_on
+
     for i in value'range loop
       for j in result'left downto result'right + 1 loop
         if result(j - 1) >= 5 then
@@ -117,6 +123,14 @@ package body bcd is
     variable acc : decimal(value'length - 1 downto 0) := value;
     variable result : unsigned(size - 1 downto 0) := (others => '0');
   begin
+    -- pragma translate_off
+    for i in value'range loop
+      if is_x(value(i)) then
+        return result;
+      end if;
+    end loop;
+    -- pragma translate_on
+
     for i in result'range loop
       result := acc(acc'right)(0) & result(size - 1 downto 1);
       for j in acc'right to acc'left - 1 loop

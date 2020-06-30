@@ -5,7 +5,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library day1;
-use day1.day1.all;
+use day1.util.all;
 
 entity example1 is
 end example1;
@@ -31,34 +31,41 @@ entity part1 is
 end part1;
 
 architecture arch of part1 is
-  constant size : positive := 22;
-  constant period : time := 1 ns;
-  file input_data : text;
   signal done : boolean := false;
 
-  signal clk : std_logic := '1';
-  signal input_valid : std_logic := '0';
-  signal output_valid : std_logic;
-  signal input, output : unsigned(size - 1 downto 0);
+  signal clk, uart_rx : std_logic := '1';
+  signal uart_tx : std_logic;
+
+  constant period : time := (1 sec) / (115200 * 15);
 begin
-  counter_upper: entity day1.counter_upper(behave) generic map ( size => size )
-    port map ( clk => clk, input => input, input_valid => input_valid,
-               output => output, output_valid => output_valid, output_ready => '1' );
+  -- size is 4 * decimal digits
+  dut : entity day1.day1 port map ( clk => clk, reset => '0', uart_rx => uart_rx, uart_tx => uart_tx );
 
   process
+    file input : text;
     variable input_line : line;
-    variable input_mass : natural;
+    variable char : character;
+    variable char_bits : std_logic_vector(7 downto 0);
   begin
-    wait for period / 4;
-    input_valid <= '1';
-    file_open(input_data, "../day1.txt", read_mode);
-    while not endfile(input_data) loop
-      readline(input_data, input_line);
-      read(input_line, input_mass);
-      input <= to_unsigned(input_mass, input'length);
-      wait for period;
+    file_open(input, "../day1.txt", read_mode);
+
+    wait for period;
+    while not endfile(input) loop
+      readline(input, input_line);
+      while input_line'length > 0 loop
+        read(input_line, char);
+        char_bits := std_logic_vector(to_unsigned(character'pos(char), char_bits'length));
+
+        uart_rx <= '0';
+        wait for period * 15;
+        for i in char_bits'range loop
+          uart_rx <= char_bits(i);
+          wait for period * 15;
+        end loop;
+        uart_rx <= '1';
+        wait for period * 15;
+      end loop;
     end loop;
-    assert to_integer(output) = 3302760 report to_string(to_integer(output)) & " /= 3302760";
     report "end of test";
     done <= true;
     wait;

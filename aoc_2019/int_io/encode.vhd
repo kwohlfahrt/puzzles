@@ -6,7 +6,9 @@ library bcd;
 use bcd.bcd.all;
 
 entity encode is
-  generic ( value_size : positive );
+  generic ( value_size : positive;
+            -- ASCII ','
+            sep : unsigned(7 downto 0) := "00101100" );
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          value : in decimal(value_size - 1 downto 0);
@@ -19,15 +21,13 @@ end entity;
 
 architecture structure of encode is
   signal acc : decimal(value'length - 1 downto 0) := (others => "0000");
-  signal ndigits : natural range 0 to value_size;
+  signal ndigits : natural range 0 to value_size := 0;
 
   signal valid_toggle : boolean := false;
   signal consumed_toggle : boolean := true;
 
   -- ASCII '0'
   constant offset : unsigned(byte'range) := "00110000";
-  -- ASCII ','
-  constant sep : unsigned(byte'range) := "00101100";
 begin
   byte <= std_logic_vector(acc(acc'left) + offset) when ndigits > 0 else std_logic_vector(sep);
   byte_valid <= '1' when valid_toggle = consumed_toggle else '0';

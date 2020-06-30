@@ -1,11 +1,11 @@
 library ieee;
 use ieee.numeric_std.all;
 
-package day1 is
+package util is
   function fuel_for( mass : unsigned ) return unsigned;
 end package;
 
-package body day1 is
+package body util is
   function fuel_for( mass : unsigned ) return unsigned is
     variable fuel : unsigned(mass'range) := mass / 3;
   begin
@@ -23,7 +23,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.day1.all;
+use work.util.all;
 
 entity counter_upper is
   generic ( size : positive );
@@ -35,9 +35,9 @@ entity counter_upper is
          output : out unsigned(size-1 downto 0);
          output_valid : out std_logic := '0';
          output_ready : in std_logic );
-end counter_upper;
+end;
 
-architecture behave of counter_upper is
+architecture arch of counter_upper is
   signal counter : unsigned(size-1 downto 0) := (others => '0');
   signal new_output : boolean := false;
 begin
@@ -62,7 +62,7 @@ begin
       end if;
     end if;
   end process;
-end behave;
+end;
 
 -- Part 2
 
@@ -93,3 +93,50 @@ end behave;
 --    reset <= true;
 --  end process;
 --end behave;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library uart;
+library int_io;
+library bcd;
+use bcd.bcd.all;
+
+entity day1 is
+  port ( clk : in std_logic;
+         reset : in std_logic := '0';
+         uart_rx : in std_logic;
+         uart_tx : out std_logic );
+end;
+
+architecture arch of day1 is
+  signal uart_in_valid, uart_in_ready,
+    uart_out_valid, uart_out_ready,
+    value_valid, value_ready,
+    count_valid, count_ready : std_logic;
+  signal uart_in, uart_out : std_logic_vector(7 downto 0);
+  signal value : decimal(5 downto 0);
+  signal count_dec : decimal(6 downto 0);
+  signal count : unsigned(4  * count_dec'length - 1 downto 0);
+begin
+  uart_recv : entity uart.rx generic map ( bit_clocks => 15, stop_slack => 1 )
+    port map ( rx => uart_rx, clk => clk, output => uart_in, valid => uart_in_valid, ready => uart_in_ready );
+  decoder : entity int_io.decode generic map ( value_size => value'length, sep => "00001010" )
+    port map ( clk => clk, reset => reset,
+               byte => uart_in, byte_valid => uart_in_valid, byte_ready => uart_in_ready,
+               value => value, value_valid => value_valid, value_ready => value_ready );
+  counter : entity work.counter_upper generic map ( size => count'length)
+    port map ( clk => clk, reset => reset,
+               input => to_unsigned(value, count'length), input_valid => value_valid, input_ready => value_ready,
+               output => count, output_valid => count_valid, output_ready => count_ready );
+
+  count_dec <= to_decimal(count, count_dec'length);
+
+  encoder : entity int_io.encode generic map ( value_size => count_dec'length )
+    port map ( clk => clk, reset => reset,
+               value => count_dec, value_valid => count_valid, value_ready => count_ready,
+               byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready );
+  uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
+    port map ( clk => clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
+end;

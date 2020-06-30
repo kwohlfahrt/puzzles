@@ -14,7 +14,7 @@ entity tx is
          valid : in std_logic;
          input : in std_logic_vector(7 downto 0);
          tx : out std_logic := '1';
-         ready : buffer std_logic );
+         ready : out std_logic );
 end;
 
 architecture structure of tx is
