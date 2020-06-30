@@ -21,16 +21,16 @@ use ieee.numeric_std.all;
 use work.seven_segments.all;
 
 entity seven_segments_hex is
-	generic ( n : positive );
-	port ( value : in unsigned(n * 4 - 1 downto 0);
-	       output : out seven_segments(n - 1 downto 0) );
+  generic ( n : positive );
+  port ( value : in unsigned(n * 4 - 1 downto 0);
+         output : out seven_segments(n - 1 downto 0) );
 end;
 
 architecture structural of seven_segments_hex is
 begin
-	gen_display : for i in output'range generate
-                output(i) <= hex_digits(to_integer(value((i + 1) * 4 - 1 downto i * 4)));
-	end generate;
+  gen_display : for i in output'range generate
+    output(i) <= hex_digits(to_integer(value((i + 1) * 4 - 1 downto i * 4)));
+  end generate;
 end;
 
 library ieee;
@@ -44,14 +44,14 @@ use bcd.bcd.all;
 use work.seven_segments.all;
 
 entity seven_segments_dec is
-	generic ( n : positive );
-	port ( value : in decimal(n - 1 downto 0);
-	       output : out seven_segments(n - 1 downto 0) );
+  generic ( n : positive );
+  port ( value : in decimal(n - 1 downto 0);
+         output : out seven_segments(n - 1 downto 0) );
 end;
 
 architecture structural of seven_segments_dec is
 begin
-	gen_display : for i in output'range generate
-		output(i) <= hex_digits(0 to 9)(to_integer(value(i)));
-	end generate;
+  gen_display : for i in output'range generate
+    output(i) <= hex_digits(0 to 9)(to_integer(value(i)));
+  end generate;
 end;

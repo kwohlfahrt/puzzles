@@ -66,8 +66,14 @@ begin
           case state is
             when start_bit => tx <= '0';
             when data => tx <= buf(data_idx);
-            -- TODO: Implement parity
-            when parity => tx <= '1';
+            when parity =>
+              if parity_type = even then
+                tx <= parity(buf);
+              elsif parity_type = odd then
+                tx <= '1' xor parity(buf);
+              else
+                tx <= '-';
+              end if;
             when stop_bits => tx <= '1';
           end case;
         end if;

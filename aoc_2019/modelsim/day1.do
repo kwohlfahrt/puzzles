@@ -8,7 +8,7 @@ vlib int_io
 vcom -2008 -work int_io {../int_io/*.vhd}
 
 vlib day1
-vcom -2008 -work day1 {../day1.vhd}
+vcom -2008 -work day1 {../seven-segment.vhd} {../day1.vhd}
 
 vlib day1_tb
 vcom -2008 -work day1_tb {../tbs/day1.vhd}

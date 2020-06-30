@@ -3,7 +3,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart_pll;
-
 use work.seven_segments.seven_segments;
 
 entity aoc_2019 is
@@ -36,8 +35,6 @@ begin
   reset_synchronizer : entity work.synchronizer
     port map ( clk => uart_clk, async_reset => reset, sync_reset => uart_reset );
 
-  day1 : entity work.day1 port map ( clk => uart_clk, reset => uart_reset, uart_rx => uart_rx, uart_tx => uart_tx );
-
---  display : entity work.seven_segments_dec generic map ( n => 4 )
---    port map ( value => value(3 downto 0), output => seven_segments );
+  day1 : entity work.day1
+    port map ( clk => uart_clk, reset => uart_reset, uart_rx => uart_rx, uart_tx => uart_tx, seven_segments => seven_segments );
 end;

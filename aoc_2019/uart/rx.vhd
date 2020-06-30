@@ -28,18 +28,23 @@ architecture structure of rx is
   signal nphases : phase_t;
   signal start_toggle, done_toggle : boolean := false;
   signal new_output, still_valid : boolean := false;
-  signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
   signal data_idx : data_idx_t := data_idx_t'left;
   signal stop_idx : stop_idx_t := stop_idx_t'low;
   signal data_samples : std_logic_vector(output'range);
+  signal parity_value : std_logic;
   signal parity_sample : std_logic;
   signal stop_sample : std_logic;
   signal start_sample : std_logic;
 begin
   valid <= '1' when new_output or still_valid else '0';
   idle <= start_toggle = done_toggle;
+
+  with parity_type select parity_value <=
+    parity(data_samples) when even,
+    '1' xor parity(data_samples) when odd,
+    '-' when others;
 
   with state select nphases <=
     phase_t'high - stop_slack when stop_bits,
@@ -89,7 +94,6 @@ begin
           case state is
             when start_bit =>
               if start_sample /= '0' then
-                err <= true;
                 state <= start_bit;
                 done_toggle <= not done_toggle;
               else
@@ -108,16 +112,18 @@ begin
                 data_idx <= data_idx_t'rightof(data_idx);
               end if;
             when parity =>
-              -- TODO: actually implement parity
-              state <= stop_bits;
-              stop_idx <= stop_idx_t'low;
+              if parity_type /= none and parity_value /= parity_sample then
+                state <= start_bit;
+                done_toggle <= not done_toggle;
+              else
+                state <= stop_bits;
+                stop_idx <= stop_idx_t'low;
+              end if;
             when stop_bits =>
               if stop_sample /= '1' then
-                err <= true;
                 state <= start_bit;
                 done_toggle <= not done_toggle;
               elsif stop_idx = stop_idx_t'high then
-                err <= false;
                 state <= start_bit;
                 output <= data_samples;
                 done_toggle <= not done_toggle;

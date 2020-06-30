@@ -142,11 +142,14 @@ library int_io;
 library bcd;
 use bcd.bcd.all;
 
+use work.seven_segments.seven_segments;
+
 entity day1 is
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          uart_rx : in std_logic;
-         uart_tx : out std_logic );
+         uart_tx : out std_logic;
+         seven_segments : out seven_segments(3 downto 0) );
 end;
 
 architecture arch of day1 is
@@ -185,4 +188,7 @@ begin
                byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready );
   uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
     port map ( clk => clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
+
+  display : entity work.seven_segments_dec generic map ( n => 4 )
+    port map ( value => count_dec(3 downto 0), output => seven_segments );
 end;
