@@ -26,6 +26,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library day1;
+library uart;
+use uart.util.transmit;
 
 entity part1 is
 end part1;
@@ -46,6 +48,7 @@ begin
     variable input_line : line;
     variable char : character;
     variable char_bits : std_logic_vector(7 downto 0);
+    constant sep : std_logic_vector(7 downto 0) := "00001010";
   begin
     file_open(input, "../day1.txt", read_mode);
 
@@ -56,15 +59,33 @@ begin
         read(input_line, char);
         char_bits := std_logic_vector(to_unsigned(character'pos(char), char_bits'length));
 
-        uart_rx <= '0';
-        wait for period * 15;
-        for i in char_bits'range loop
-          uart_rx <= char_bits(i);
-          wait for period * 15;
-        end loop;
-        uart_rx <= '1';
+        transmit(char_bits, period * 15, uart_rx);
+      end loop;
+      char_bits := "00001010";
+      transmit(char_bits, period * 15, uart_rx);
+    end loop;
+    wait;
+  end process;
+
+
+  process
+    constant expected : string := "3302760";
+    variable char_bits : std_logic_vector(7 downto 0);
+  begin
+    for i in expected'range loop
+      wait until uart_tx = '0' for period * 15 * 10 * 700;
+      wait for period;
+
+      char_bits := std_logic_vector(to_unsigned(character'pos(expected(i)), char_bits'length));
+      assert uart_tx = '0';
+      wait for period * 15;
+      for j in char_bits'reverse_range loop
+        assert uart_tx = char_bits(j)
+          report to_string(uart_tx) & " /= " & to_string(char_bits(j)) & " @ " & to_string(i) & "." & to_string(j);
         wait for period * 15;
       end loop;
+      assert uart_tx = '1';
+      wait for period;
     end loop;
     report "end of test";
     done <= true;
