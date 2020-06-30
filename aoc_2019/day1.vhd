@@ -179,7 +179,7 @@ begin
                input_valid => count_valid, input_ready => count_ready,
                output_valid => result_valid, output_ready => result_ready );
 
-  encoder : entity int_io.encode generic map ( value_size => count_dec'length, sep => "00001101"  )
+  encoder : entity int_io.encode generic map ( value_size => count_dec'length, sep => "00001010"  )
     port map ( clk => clk, reset => reset,
                value => count_dec, value_valid => result_valid, value_ready => result_ready,
                byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready );

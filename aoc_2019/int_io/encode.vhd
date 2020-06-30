@@ -22,34 +22,39 @@ end entity;
 architecture structure of encode is
   signal acc : decimal(value'length - 1 downto 0) := (others => "0000");
   signal ndigits : natural range 0 to value_size := 0;
-
-  signal valid_toggle : boolean := false;
-  signal consumed_toggle : boolean := true;
+  signal new_byte, still_valid : boolean := false;
 
   -- ASCII '0'
   constant offset : unsigned(byte'range) := "00110000";
 begin
   byte <= std_logic_vector(acc(acc'left) + offset) when ndigits > 0 else std_logic_vector(sep);
-  byte_valid <= '1' when valid_toggle = consumed_toggle else '0';
-  value_ready <= '1' when ndigits = 0 and byte_ready = '1' else '0';
+  byte_valid <= '1' when new_byte or still_valid else '0';
+  value_ready <= '1' when ndigits = 0 else '0';
 
   process (clk, reset)
   begin
     if reset = '1' then
+      still_valid <= false;
+      new_byte <= false;
+      ndigits <= 0;
+      acc <= (others => "0000");
     elsif rising_edge(clk) then
-      if byte_valid = '1' and byte_ready = '1' then
-        consumed_toggle <= not consumed_toggle;
+      if new_byte and byte_ready /= '1' then
+        still_valid <= true;
+      elsif byte_ready = '1' then
+        still_valid <= false;
       end if;
 
-      if byte_ready = '1' then
-        if value_ready and value_valid then
-          acc <= value sll clz(value);
-          ndigits <= value_size - clz(value);
-          valid_toggle <= not valid_toggle;
-        elsif ndigits > 0 then
+      new_byte <= false;
+      if not byte_valid or byte_ready then
+        if ndigits > 0 then
           acc <= acc sll 1;
           ndigits <= ndigits - 1;
-          valid_toggle <= not valid_toggle;
+          new_byte <= true;
+        elsif value_ready and value_valid then
+          acc <= value sll clz(value);
+          ndigits <= value_size - clz(value);
+          new_byte <= true;
         end if;
       end if;
     end if;
