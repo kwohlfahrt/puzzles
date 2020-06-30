@@ -73,7 +73,7 @@ begin
     variable char_bits : std_logic_vector(7 downto 0);
   begin
     for i in expected'range loop
-      wait until uart_tx = '0' for period * 15 * 10 * 700;
+      wait until uart_tx = '0';
       wait for period;
 
       char_bits := std_logic_vector(to_unsigned(character'pos(expected(i)), char_bits'length));

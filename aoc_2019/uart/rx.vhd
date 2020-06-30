@@ -27,7 +27,7 @@ architecture structure of rx is
   signal phase : phase_t := phase_t'low;
   signal nphases : phase_t;
   signal start_toggle, done_toggle : boolean := false;
-  signal valid_toggle, consumed_toggle : boolean := false;
+  signal new_output, still_valid : boolean := false;
   signal err : boolean := true; -- Nothing received
 
   signal idle : boolean;
@@ -38,7 +38,7 @@ architecture structure of rx is
   signal stop_sample : std_logic;
   signal start_sample : std_logic;
 begin
-  valid <= '1' when valid_toggle /= consumed_toggle else '0';
+  valid <= '1' when new_output or still_valid else '0';
   idle <= start_toggle = done_toggle;
 
   with state select nphases <=
@@ -52,17 +52,20 @@ begin
       phase <= phase_t'low;
       start_toggle <= false;
       done_toggle <= false;
-      valid_toggle <= false;
-      consumed_toggle <= false;
+      new_output <= false;
+      still_valid <= false;
     elsif rising_edge(clk) then
       if idle and rx = '0' then
         start_toggle <= not start_toggle;
       end if;
 
-      if valid = '1' and ready = '1' then
-        consumed_toggle <= not consumed_toggle;
+      if new_output and ready /= '1' then
+        still_valid <= true;
+      elsif ready = '1' then
+        still_valid <= false;
       end if;
 
+      new_output <= false;
       if not idle or rx = '0' then
         -- Divider
         if phase = nphases then
@@ -118,7 +121,7 @@ begin
                 state <= start_bit;
                 output <= data_samples;
                 done_toggle <= not done_toggle;
-                valid_toggle <= not valid_toggle;
+                new_output <= true;
               else
                 stop_idx <= stop_idx_t'succ(stop_idx);
               end if;
