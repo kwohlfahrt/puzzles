@@ -67,7 +67,6 @@ begin
     wait;
   end process;
 
-
   process
     constant expected : string := "3302760";
     variable char_bits : std_logic_vector(7 downto 0);
@@ -102,65 +101,92 @@ begin
   end process;
 end;
 
----- Part 2
---
---library std;
---
---entity example2 is
---end example2;
---
---architecture behave of example2 is
---  signal mass, fuel : natural;
---begin
---  counter: entity work.total_fuel_counter(behave)
---    port map (mass => mass, fuel => fuel);
---  process
---    type example_t is record
---      mass, fuel : natural;
---    end record;
---    type examples_t is array (natural range <>) of example_t;
---    constant examples : examples_t :=
---      ((12, 2), (1969, 966), (100756, 50346));
---  begin
---    for i in examples'range loop
---      mass <= examples(i).mass;
---      wait for 1 sec;
---      assert fuel = examples(i).fuel
---        report natural'image(fuel) & " = " & natural'image(examples(i).fuel);
---    end loop;
---    report "end of test";
---    wait;
---  end process;
---end behave;
---
---library std;
---use std.textio.all;
---
---entity part2 is
---end part2;
---
---architecture behave of part2 is
---  file input_data : text;
---  signal mass, fuel, fuel_sum : natural;
---begin
---  counter: entity work.total_fuel_counter(behave)
---    port map (mass => mass, fuel => fuel);
---  upper: entity work.counter_upper(behave)
---    port map (input => fuel, reset => false, output => fuel_sum);
---  process
---    variable input_line, output_line : line;
---    variable input_mass : natural;
---  begin
---    file_open(input_data, "./day1.txt", read_mode);
---    while not endfile(input_data) loop
---      readline(input_data, input_line);
---      read(input_line, input_mass);
---      mass <= input_mass;
---      wait for 1 sec;
---    end loop;
---    write(output_line, natural'image(fuel_sum));
---    writeline(output, output_line);
---    file_close(input_data);
---    wait;
---  end process;
---end behave;
+-- Part 2
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+library day1;
+
+entity example2 is
+end example2;
+
+architecture arch of example2 is
+  signal done : boolean := false;
+
+  signal clk : std_logic := '1';
+  signal reset : std_logic := '0';
+  signal input_valid, output_ready : std_logic := '0';
+  signal input_ready, output_valid : std_logic;
+  signal input, output : unsigned(20 downto 0);
+
+  constant period : time := 1 ns;
+begin
+  dut : entity day1.fuel_counter_upper generic map ( size => output'length )
+    port map ( clk => clk, reset => reset, part => 2,
+               input => input, input_valid => input_valid, input_ready => input_ready,
+               output => output, output_valid => output_valid, output_ready => output_ready );
+
+  process
+  begin
+    wait for period / 4;
+    input <= to_unsigned(14, input'length);
+    input_valid <= '1';
+    output_ready <= '1';
+    wait for period;
+    input_valid <= '0';
+
+    wait for period;
+    reset <= '1';
+    wait for period;
+    reset <= '0';
+    input <= to_unsigned(1969, input'length);
+    input_valid <= '1';
+    wait for period;
+    input_valid <= '0';
+
+    wait for period * 5;
+    reset <= '1';
+    wait for period;
+    reset <= '0';
+    input <= to_unsigned(100756, input'length);
+    input_valid <= '1';
+    wait for period;
+    input_valid <= '0';
+    wait;
+  end process;
+
+
+  process
+  begin
+    wait until rising_edge(clk) and output_valid = '1';
+    assert output = to_unsigned(2, output'length)
+      report to_string(to_integer(output)) & " /= " & to_string(2);
+    assert output_valid = '1';
+
+    for i in 0 to 5 loop
+      wait until rising_edge(clk) and output_valid = '1';
+    end loop;
+    assert output = to_unsigned(966, output'length)
+      report to_string(to_integer(output)) & " /= " & to_string(966);
+
+    for i in 0 to 9 loop
+      wait until rising_edge(clk) and output_valid = '1';
+    end loop;
+    assert output = to_unsigned(50346, output'length)
+      report to_string(to_integer(output)) & " /= " & to_string(50346);
+    report "end of test";
+    done <= true;
+    wait;
+  end process;
+
+  process
+  begin
+    while not done loop
+      wait for period / 2;
+      clk <= not clk;
+    end loop;
+    wait;
+  end process;
+end;
