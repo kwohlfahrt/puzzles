@@ -123,7 +123,7 @@ architecture arch of example2 is
 
   constant period : time := 1 ns;
 begin
-  dut : entity day1.fuel_counter_upper generic map ( size => output'length )
+  dut : entity day1.fuel_counter_upper generic map ( size => output'length, n => 1 )
     port map ( clk => clk, reset => reset, part => 2,
                input => input, input_valid => input_valid, input_ready => input_ready,
                output => output, output_valid => output_valid, output_ready => output_ready );
