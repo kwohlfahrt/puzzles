@@ -66,29 +66,42 @@ entity rocket_equation is
          input : in unsigned(size-1 downto 0);
          input_valid : in std_logic;
          input_ready : buffer std_logic;
-         output : buffer unsigned(size-1 downto 0);
+         output : buffer unsigned(size-1 downto 0) := to_unsigned(0, size);
          output_valid : buffer std_logic;
          output_ready : in std_logic );
 end;
 
 architecture arch of rocket_equation is
-  signal acc : unsigned(input'range) := to_unsigned(0, input'length);
-  signal mass : unsigned(input'range);
+  signal mass, acc : unsigned(input'range) := to_unsigned(0, input'length);
+  signal fuel_mass : unsigned(input'range);
+
+  signal new_value, still_valid : boolean := false;
+  signal idle : boolean := true;
 begin
-  mass <= input when acc = 0 else acc;
-  output <= fuel_for(mass);
-  output_valid <= input_valid when acc = 0 else '1';
-  input_ready <= output_ready when acc = 0 else '0';
+  fuel_mass <= fuel_for(input) when mass = 0 else fuel_for(mass);
+  output <= acc + fuel_mass;
+  output_valid <= input_valid when fuel_mass = 0 else '0';
+  input_ready <= output_ready when fuel_mass = 0 else '0';
 
   process (clk, reset)
   begin
     if reset = '1' then
+      mass <= to_unsigned(0, mass'length);
       acc <= to_unsigned(0, acc'length);
     elsif rising_edge(clk) then
-      if acc /= 0 then
+      if new_value and output_ready /= '1' then
+        still_valid <= true;
+      elsif output_ready = '1' then
+        still_valid <= false;
+      end if;
+
+      new_value <= false;
+      if fuel_mass /= 0 then
+        mass <= fuel_mass;
         acc <= output;
       elsif input_ready and input_valid then
-        acc <= output;
+        mass <= fuel_mass;
+        acc <= to_unsigned(0, acc'length);
       end if;
     end if;
   end process;
