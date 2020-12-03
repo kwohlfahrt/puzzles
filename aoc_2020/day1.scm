@@ -7,13 +7,13 @@
    [(xs ys) (cartesian xs ys '())]
    [(xs ys acc)
     (cond [(eq? (length xs) 0) acc]
-          [else (cartesian (cdr xs) ys (append (map (lambda (y) (cons (car xs) y)) ys) acc))])]))
+          [else (cartesian (cdr xs) ys (append (map (cut cons (car xs) <>) ys) acc))])]))
 
-(define sum (lambda (xs) (fold-left + 0 xs)))
-(define product (lambda (xs) (fold-left * 1 xs)))
+(define sum (cut fold-left + 0 <>))
+(define product (cut fold-left * 1 <>))
 
 (let ([values (map string->number (read-lines (open-input-file (car (cdr (command-line))))))]
       [rule (lambda (xs) (eq? 2020 (sum xs)))])
   (display (list
-            (car (map product (filter rule (cartesian values (map (lambda (x) (list x)) values)))))
-            (car (map product (filter rule (cartesian values (cartesian values (map (lambda (x) (list x)) values)))))))))
+            (car (map product (filter rule (cartesian values (map list values)))))
+            (car (map product (filter rule (cartesian values (cartesian values (map list values)))))))))

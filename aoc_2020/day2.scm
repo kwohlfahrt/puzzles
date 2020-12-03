@@ -37,13 +37,13 @@
 
 (define check-rule
   (lambda (range char password)
-    (range-contains range (count (lambda (c) (eq? char c)) (string->list password)))))
+    (range-contains range (count (cut eq? char <>) (string->list password)))))
 
 (define check-rule-2
   (lambda (range char password)
-    (eq? 1 (length (filter (lambda (c) (eq? c char)) (map (lambda (pos) (string-ref password (- pos 1))) range))))))
+    (eq? 1 (length (filter (cut eq? char <>) (map (lambda (pos) (string-ref password (- pos 1))) range))))))
 
 (let ([values (read-lines (open-input-file (car (cdr (command-line)))))])
   (display (list
-            (count (lambda (rule) (apply check-rule rule)) (map parse-rule values))
-            (count (lambda (rule) (apply check-rule-2 rule)) (map parse-rule values)))))
+            (count (cut apply check-rule <>) (map parse-rule values))
+            (count (cut apply check-rule-2 <>) (map parse-rule values)))))
