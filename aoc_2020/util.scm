@@ -1,5 +1,5 @@
 (library (util)
-  (export cut <> take-until read-lines)
+  (export cut <> take-until read-lines zip count)
   (import (rnrs))
 
   (define-syntax cut-internal
@@ -16,9 +16,16 @@
   (define <>) ; For REPL compatibility
 
   (define take-until
-    (lambda (c f acc)
-      (let ([v (f)])
-        (if (c v) acc (take-until c f (cons v acc))))))
+    (letrec ([take-until
+              (lambda (c f acc)
+                (let ([v (f)])
+                  (if (c v) acc (take-until c f (cons v acc)))))])
+      (lambda (c f) (reverse (take-until c f '())))))
 
   (define read-lines
-    (lambda (in) (take-until eof-object? (lambda () (get-line in)) '()))))
+    (lambda (in) (take-until eof-object? (lambda () (get-line in)))))
+
+  (define zip (lambda args (apply map (cons list args))))
+
+  (define count (lambda (fn xs) (length (filter fn xs)))))
+
