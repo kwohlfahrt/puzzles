@@ -1,5 +1,5 @@
 (library (util)
-  (export cut <> take-until read-lines zip count)
+  (export cut <> take-until read-lines zip count string-split unravel)
   (import (rnrs))
 
   (define-syntax cut-internal
@@ -27,5 +27,30 @@
 
   (define zip (lambda args (apply map (cons list args))))
 
-  (define count (lambda (fn xs) (length (filter fn xs)))))
+  (define count (lambda (fn xs) (length (filter fn xs))))
 
+  (define string-find
+    (case-lambda
+     [(c str pos)
+      (cond [(eq? pos (string-length str)) #f]
+            [(eq? c (string-ref str pos)) pos]
+            [else (string-find c str (+ 1 pos))])]
+     [(c str) (string-find c str 0)]))
+
+  (define string-split
+    (lambda (sep str)
+      (letrec ([string-split
+                (lambda (pos acc)
+                  (let ([next (string-find sep str pos)])
+                    (cond [(eq? pos (string-length str)) acc]
+                          [next (cons (substring str pos next)
+                                      (string-split (+ 1 next) acc))]
+                          [else (cons (substring str pos (string-length str)) acc)])))])
+        (string-split 0 '()))))
+
+  (define unravel
+    (letrec ([unravel
+              (lambda (dims idx acc)
+                (if (eq? idx '()) acc
+                    (unravel (cdr dims) (cdr idx) (+ (car idx) (* acc (car dims))))))])
+      (lambda (dims idx) (unravel dims idx 0)))))

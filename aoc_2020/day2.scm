@@ -2,26 +2,6 @@
 
 (import (rnrs) (util))
 
-(define string-find
-  (case-lambda
-   [(c str pos)
-    (cond [(eq? pos (string-length str)) #f]
-          [(eq? c (string-ref str pos)) pos]
-          [else (string-find c str (+ 1 pos))])]
-   [(c str) (string-find c str 0)]))
-
-(define string-split
-  (letrec ([string-split
-            (lambda (sep str pos acc)
-              (let ([next (string-find sep str pos)])
-                (cond [(eq? pos (string-length str)) acc]
-                      [next (cons (substring str pos next)
-                                  (string-split sep str (+ 1 next) acc))]
-                      [else (cons (substring str pos (string-length str)) acc)])))])
-    (lambda (sep str) (string-split sep str 0 '()))))
-
-(define count (lambda (fn xs) (length (filter fn xs))))
-
 (define parse-range
   (lambda (str) (map string->number (string-split #\- str))))
 

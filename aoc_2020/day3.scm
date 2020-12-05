@@ -6,13 +6,6 @@
 
 (define-record-type grid (fields dims points))
 
-(define unravel
-  (letrec ([unravel
-            (lambda (dims idx acc)
-              (if (eq? idx '()) acc
-                  (unravel (cdr dims) (cdr idx) (+ (car idx) (* acc (car dims))))))])
-    (lambda (dims idx) (unravel dims idx 0))))
-
 (define roll (lambda (dims idx) (map mod idx dims)))
 
 (define get-point (lambda (grid idx) (vector-ref (grid-points grid) (unravel (grid-dims grid) idx))))
