@@ -2,14 +2,6 @@
 
 (import (rnrs) (util))
 
-(define interleave
-  (lambda (sep xss)
-    (letrec ([interleave
-              (lambda (xss acc)
-                (if (eq? '() xss) acc
-                    (interleave (cdr xss) (cons (car xss) (cons sep acc)))))])
-      (cons (car xss) (reverse (interleave (cdr xss) '()))))))
-
 (define parse-passport
   (lambda (lines)
     (map (cut string-split #\: <>) (list-sort string>? (string-split #\space (apply string-append (interleave " " lines)))))))
@@ -29,7 +21,6 @@
     (substring str (- (string-length str) n) (string-length str))))
 
 (define string-tosuffix (lambda (str n) (substring str 0 (- (string-length str) n))))
-
 (define string-fromprefix (lambda (str n) (substring str n (string-length str))))
 
 (define startswith

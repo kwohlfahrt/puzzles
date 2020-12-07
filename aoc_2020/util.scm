@@ -1,5 +1,5 @@
 (library (util)
-  (export cut <> take-until read-lines zip count string-split unravel list-split)
+  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln)
   (import (rnrs))
 
   (define list-split
@@ -39,23 +39,40 @@
   (define count (lambda (fn xs) (length (filter fn xs))))
 
   (define string-find
-    (case-lambda
-     [(c str pos)
-      (cond [(eq? pos (string-length str)) #f]
-            [(eq? c (string-ref str pos)) pos]
-            [else (string-find c str (+ 1 pos))])]
-     [(c str) (string-find c str 0)]))
+    (letrec ([string-find
+              (lambda (query str pos)
+                (cond [(eq? (+ -1 pos (string-length query)) (string-length str)) #f]
+                      [(eq? 0 (string-length query)) #f]
+                      [(string=? query (substring str pos (+ pos (string-length query)))) pos]
+                      [else (string-find query str (+ 1 pos))]))])
+      (case-lambda [(query str pos) (string-find query str pos)]
+                   [(query str) (string-find query str 0)])))
 
   (define string-split
     (lambda (sep str)
       (letrec ([string-split
-                (lambda (pos acc)
+                (lambda (sep pos acc)
                   (let ([next (string-find sep str pos)])
                     (cond [(eq? pos (string-length str)) acc]
                           [next (cons (substring str pos next)
-                                      (string-split (+ 1 next) acc))]
+                                      (string-split sep (+ (string-length sep) next) acc))]
                           [else (cons (substring str pos (string-length str)) acc)])))])
-        (string-split 0 '()))))
+        (string-split (if (char? sep) (string sep) sep) 0 '()))))
+
+  (define interleave
+    (lambda (sep xss)
+      (letrec ([interleave
+                (lambda (xss acc)
+                  (if (eq? '() xss) acc
+                      (interleave (cdr xss) (cons (car xss) (cons sep acc)))))])
+        (cons (car xss) (reverse (interleave (cdr xss) '()))))))
+
+  (define string-join (lambda (sep strings) (apply string-append (interleave sep strings))))
+
+  (define writeln
+    (lambda args
+      (apply write args)
+      (display #\newline)))
 
   (define unravel
     (letrec ([unravel
