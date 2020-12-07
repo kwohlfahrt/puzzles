@@ -1,6 +1,15 @@
 (library (util)
-  (export cut <> take-until read-lines zip count string-split unravel)
+  (export cut <> take-until read-lines zip count string-split unravel list-split)
   (import (rnrs))
+
+  (define list-split
+    (lambda (sep xs)
+      (letrec ([list-split
+                (lambda (xs acc)
+                  (cond [(eq? xs '()) acc]
+                        [(eq? sep (car xs)) (list-split (cdr xs) (cons '() acc))]
+                        [else (list-split (cdr xs) (cons (cons (car xs) (car acc)) (cdr acc)))]))])
+        (reverse (list-split xs '(()))))))
 
   (define-syntax cut-internal
     (syntax-rules (<>)

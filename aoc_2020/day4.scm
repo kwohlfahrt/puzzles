@@ -2,15 +2,6 @@
 
 (import (rnrs) (util))
 
-(define list-split
-  (lambda (sep xs)
-    (letrec ([list-split
-              (lambda (xs acc)
-                (cond [(eq? xs '()) acc]
-                      [(eq? sep (car xs)) (list-split (cdr xs) (cons '() acc))]
-                      [else (list-split (cdr xs) (cons (cons (car xs) (car acc)) (cdr acc)))]))])
-      (reverse (list-split xs '(()))))))
-
 (define interleave
   (lambda (sep xss)
     (letrec ([interleave
@@ -82,10 +73,5 @@
 
 (let* ([values (read-lines (open-input-file (car (cdr (command-line)))))]
        [passports (map parse-passport (list-split "" values))])
-  (for-each (lambda (passport)
-              (if (is-valid-2 passport)
-                  (begin
-                    (write passport)
-                    (display "\n")))) passports)
   (write (list (count is-valid passports)
                (count is-valid-2 passports))))
