@@ -1,6 +1,8 @@
 (library (util)
-  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln)
+  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln id)
   (import (rnrs))
+
+  (define id (lambda (id) id))
 
   (define list-split
     (lambda (sep xs)
