@@ -1,5 +1,5 @@
 (library (util)
-  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln id)
+  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln id cartesian)
   (import (rnrs))
 
   (define id (lambda (id) id))
@@ -81,4 +81,11 @@
               (lambda (dims idx acc)
                 (if (eq? idx '()) acc
                     (unravel (cdr dims) (cdr idx) (+ (car idx) (* acc (car dims))))))])
-      (lambda (dims idx) (unravel dims idx 0)))))
+      (lambda (dims idx) (unravel dims idx 0))))
+
+  (define cartesian
+    (lambda args
+      (fold-right
+       (lambda (xs ys)
+	 (apply append (map (lambda (x) (map (lambda (y) (cons x y)) ys)) xs)))
+      '(()) args))))
