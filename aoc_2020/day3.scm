@@ -1,14 +1,9 @@
 #!/usr/bin/env scheme-script
-
-(import (rnrs) (only (chezscheme) sleep make-time) (util))
+(import (rnrs) (only (chezscheme) sleep make-time) (util) (grid))
 
 (define is-tree (cut eq? #\# <>))
 
-(define-record-type grid (fields dims points))
-
 (define roll (lambda (dims idx) (map mod idx dims)))
-
-(define get-point (lambda (grid idx) (vector-ref (grid-points grid) (unravel (grid-dims grid) idx))))
 
 (define parse-grid
   (lambda (lines)
@@ -20,7 +15,7 @@
   (letrec ([intersections
             (lambda (grid slope pos acc)
               (if (>= (car pos) (car (grid-dims grid))) acc
-                  (intersections grid slope (apply map (cons + (list slope pos))) (cons (get-point grid (roll (grid-dims grid) pos)) acc))))])
+                  (intersections grid slope (apply map (cons + (list slope pos))) (cons (grid-ref grid (roll (grid-dims grid) pos)) acc))))])
     (lambda (grid slope) (reverse (intersections grid slope '(0 0) '())))))
 
 (define count-trees (lambda (grid slope) (count (cut eq? #t <>) (intersections grid slope))))

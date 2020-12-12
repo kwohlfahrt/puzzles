@@ -1,5 +1,5 @@
 (library (util)
-  (export cut <> take-until read-lines zip count string-find string-split unravel list-split interleave string-join writeln id cartesian)
+  (export cut <> take-until read-lines zip count string-find string-split list-split interleave string-join writeln id cartesian)
   (import (rnrs))
 
   (define id (lambda (id) id))
@@ -75,13 +75,6 @@
     (lambda args
       (apply write args)
       (display #\newline)))
-
-  (define unravel
-    (letrec ([unravel
-              (lambda (dims idx acc)
-                (if (eq? idx '()) acc
-                    (unravel (cdr dims) (cdr idx) (+ (car idx) (* acc (car dims))))))])
-      (lambda (dims idx) (unravel dims idx 0))))
 
   (define cartesian
     (lambda args
