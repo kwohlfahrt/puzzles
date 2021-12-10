@@ -170,11 +170,6 @@ begin
     ready_1 when 1,
     ready_0 when 2;
 
-  rocket_equation : entity work.rocket_equation generic map ( size => size )
-    port map ( clk => clk, reset => reset,
-               input => input, input_valid => input_valid, input_ready => ready_0,
-               output => value_1, output_valid => valid_1, output_ready => ready_1 );
-
   with part select valid_2 <=
     input_valid when 1,
     valid_1 when 2;
@@ -182,6 +177,11 @@ begin
   with part select value_2 <=
     fuel_for(input) when 1,
     value_1 when 2;
+
+  rocket_equation : entity work.rocket_equation generic map ( size => size )
+    port map ( clk => clk, reset => reset,
+               input => input, input_valid => input_valid, input_ready => ready_0,
+               output => value_1, output_valid => valid_1, output_ready => ready_1 );
 
   counter_upper : entity work.counter_upper generic map ( size => size )
     port map ( clk => clk, reset => reset,

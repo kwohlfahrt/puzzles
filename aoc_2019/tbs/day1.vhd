@@ -4,6 +4,27 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+package util is
+  function to_ascii( c : std_logic_vector(7 downto 0) ) return character;
+  function from_ascii( c : character ) return std_logic_vector;
+end package;
+
+package body util is
+  function to_ascii( c : std_logic_vector(7 downto 0) ) return character is
+  begin
+    return character'val(to_integer(unsigned(c)));
+  end function;
+
+  function from_ascii( c : character ) return std_logic_vector is
+  begin
+    return std_logic_vector(to_unsigned(character'pos(c), 8));
+  end function;
+end;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 library day1;
 use day1.util.all;
 
@@ -28,6 +49,7 @@ use ieee.numeric_std.all;
 library day1;
 library uart;
 use uart.util.transmit;
+use work.util.all;
 
 entity part1 is
 end part1;
@@ -57,7 +79,7 @@ begin
       readline(input, input_line);
       while input_line'length > 0 loop
         read(input_line, char);
-        char_bits := std_logic_vector(to_unsigned(character'pos(char), char_bits'length));
+        char_bits := from_ascii(char);
 
         transmit(char_bits, period * 15, uart_rx);
       end loop;
@@ -69,20 +91,22 @@ begin
 
   process
     constant expected : string := "3302760";
-    variable char_bits : std_logic_vector(7 downto 0);
+    variable out_bits, char_bits : std_logic_vector(7 downto 0);
   begin
     for i in expected'range loop
       wait until uart_tx = '0';
       wait for period;
 
-      char_bits := std_logic_vector(to_unsigned(character'pos(expected(i)), char_bits'length));
+      char_bits := from_ascii(expected(i));
+      out_bits := "00000000";
       assert uart_tx = '0';
       wait for period * 15;
       for j in char_bits'reverse_range loop
-        assert uart_tx = char_bits(j)
-          report to_string(uart_tx) & " /= " & to_string(char_bits(j)) & " @ " & to_string(i) & "." & to_string(j);
+	out_bits :=  uart_tx & out_bits(7 downto 1);
         wait for period * 15;
       end loop;
+      assert out_bits = char_bits
+        report to_ascii(out_bits) & " /= " & expected(i) & " @ " & to_string(i);
       assert uart_tx = '1';
       wait for period;
     end loop;
@@ -196,6 +220,7 @@ use ieee.numeric_std.all;
 library day1;
 library uart;
 use uart.util.transmit;
+use work.util.all;
 
 entity part2 is
 end part2;
@@ -226,7 +251,7 @@ begin
       readline(input, input_line);
       while input_line'length > 0 loop
         read(input_line, char);
-        char_bits := std_logic_vector(to_unsigned(character'pos(char), char_bits'length));
+        char_bits := from_ascii(char);
 
         transmit(char_bits, period * 15, uart_rx);
       end loop;
@@ -238,20 +263,21 @@ begin
 
   process
     constant expected : string := "4951265";
-    variable char_bits : std_logic_vector(7 downto 0);
+    variable out_bits, char_bits : std_logic_vector(7 downto 0);
   begin
     for i in expected'range loop
       wait until uart_tx = '0';
       wait for period;
 
-      char_bits := std_logic_vector(to_unsigned(character'pos(expected(i)), char_bits'length));
+      char_bits := from_ascii(expected(i));
       assert uart_tx = '0';
       wait for period * 15;
       for j in char_bits'reverse_range loop
-        assert uart_tx = char_bits(j)
-          report to_string(uart_tx) & " /= " & to_string(char_bits(j)) & " @ " & to_string(i) & "." & to_string(j);
+	out_bits :=  uart_tx & out_bits(7 downto 1);
         wait for period * 15;
       end loop;
+      assert out_bits = char_bits
+        report to_ascii(out_bits) & " /= " & expected(i) & " @ " & to_string(i);
       assert uart_tx = '1';
       wait for period;
     end loop;
