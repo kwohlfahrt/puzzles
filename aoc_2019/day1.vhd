@@ -72,36 +72,34 @@ entity rocket_equation is
 end;
 
 architecture arch of rocket_equation is
-  signal mass, acc : unsigned(input'range) := to_unsigned(0, input'length);
-  signal fuel_mass : unsigned(input'range);
+  signal acc, mass : unsigned(input'range) := to_unsigned(0, input'length);
+  signal have_data : boolean := false;
 
-  signal new_value, still_valid : boolean := false;
-  signal idle : boolean := true;
+  signal next_mass : unsigned(input'range);
+  signal output_txn, input_txn : boolean;
 begin
-  fuel_mass <= fuel_for(input) when mass = 0 else fuel_for(mass);
-  output <= acc + fuel_mass;
-  output_valid <= input_valid when fuel_mass = 0 else '0';
-  input_ready <= output_ready when fuel_mass = 0 else '0';
+  input_txn <= input_ready = '1' and input_valid = '1';
+  output_txn <= output_ready = '1' and output_valid = '1';
+
+  next_mass <= fuel_for(input) when input_txn else fuel_for(mass);
+  output <= next_mass when input_txn else acc + next_mass;
+
+  input_ready <= '1' when fuel_for(fuel_for(mass)) = 0 and (output_ready = '1') else '0';
+  output_valid <= '1' when fuel_for(next_mass) = 0 and (have_data or input_valid = '1') else '0';
 
   process (clk, reset)
   begin
     if reset = '1' then
-      mass <= to_unsigned(0, mass'length);
       acc <= to_unsigned(0, acc'length);
+      mass <= to_unsigned(0, mass'length);
     elsif rising_edge(clk) then
-      if new_value and output_ready /= '1' then
-        still_valid <= true;
-      elsif output_ready = '1' then
-        still_valid <= false;
-      end if;
+      mass <= next_mass;
+      acc <= output;
 
-      new_value <= false;
-      if fuel_mass /= 0 then
-        mass <= fuel_mass;
-        acc <= output;
-      elsif input_ready and input_valid then
-        mass <= fuel_mass;
-        acc <= to_unsigned(0, acc'length);
+      if input_txn and not output_txn then
+        have_data <= true;
+      elsif output_txn and not input_txn then
+        have_data <= false;
       end if;
     end if;
   end process;
@@ -166,7 +164,7 @@ end;
 
 architecture arch of fuel_counter_upper is
   signal ready_0, valid_1, ready_1, valid_2, ready_2, valid_3 : std_logic;
-  signal value_1, value_2, value_3 : unsigned(input'range);
+  signal value_1, value_2 : unsigned(input'range);
 begin
   with part select input_ready <=
     ready_1 when 1,

@@ -19,8 +19,6 @@ if { !([info exists HEADLESS] && !$HEADLESS) } {
     radix -unsigned
     add wave -group part1 sim:/part1/*
     add wave -group example2 sim:/example2/*
-    add wave sim:/example2/dut/*
-    add wave sim:/example2/dut/rocket_equation/*
 }
 
 run -all

@@ -123,8 +123,8 @@ architecture arch of example2 is
 
   constant period : time := 1 ns;
 begin
-  dut : entity day1.fuel_counter_upper generic map ( size => output'length, n => 1 )
-    port map ( clk => clk, reset => reset, part => 2,
+  dut : entity day1.rocket_equation generic map ( size => output'length )
+    port map ( clk => clk, reset => reset,
                input => input, input_valid => input_valid, input_ready => input_ready,
                output => output, output_valid => output_valid, output_ready => output_ready );
 
@@ -163,17 +163,12 @@ begin
     wait until rising_edge(clk) and output_valid = '1';
     assert output = to_unsigned(2, output'length)
       report to_string(to_integer(output)) & " /= " & to_string(2);
-    assert output_valid = '1';
 
-    for i in 0 to 5 loop
-      wait until rising_edge(clk) and output_valid = '1';
-    end loop;
+    wait until rising_edge(clk) and output_valid = '1';
     assert output = to_unsigned(966, output'length)
       report to_string(to_integer(output)) & " /= " & to_string(966);
 
-    for i in 0 to 9 loop
-      wait until rising_edge(clk) and output_valid = '1';
-    end loop;
+    wait until rising_edge(clk) and output_valid = '1';
     assert output = to_unsigned(50346, output'length)
       report to_string(to_integer(output)) & " /= " & to_string(50346);
     report "end of test";
