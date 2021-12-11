@@ -235,7 +235,7 @@ begin
                value => value, value_valid => value_valid, value_ready => value_ready );
 
   counter : entity work.fuel_counter_upper generic map ( size => count'length, n => 100 )
-    port map ( clk => clk, reset => reset,
+    port map ( clk => clk, reset => reset, part => part,
                input => to_unsigned(value, count'length), input_valid => value_valid, input_ready => value_ready,
                output => count, output_valid => count_valid, output_ready => count_ready );
   count_dec <= to_decimal(count, count_dec'length);
