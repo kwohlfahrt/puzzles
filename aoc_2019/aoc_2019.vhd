@@ -3,7 +3,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart_pll;
-use work.seven_segments.seven_segments;
+library seven_segment;
+use seven_segment.seven_segments.seven_segments;
 
 entity aoc_2019 is
   port ( switches : in std_logic_vector(9 downto 0);

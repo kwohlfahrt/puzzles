@@ -5,7 +5,8 @@ use ieee.numeric_std.all;
 library bcd;
 use bcd.bcd.all;
 
-use work.seven_segments.seven_segments;
+library seven_segment;
+use seven_segment.seven_segments.seven_segments;
 
 entity tb1 is
 end;

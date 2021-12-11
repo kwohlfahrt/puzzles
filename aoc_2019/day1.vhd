@@ -202,9 +202,10 @@ use ieee.numeric_std.all;
 library uart;
 library int_io;
 library bcd;
+library seven_segment;
 use bcd.bcd.all;
 
-use work.seven_segments.seven_segments;
+use seven_segment.seven_segments.seven_segments;
 
 entity day1 is
   port ( clk : in std_logic;
@@ -247,7 +248,7 @@ begin
   uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
     port map ( clk => clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
 
-  display : entity work.seven_segments_dec generic map ( n => 4 )
+  display : entity seven_segment.seven_segments_dec generic map ( n => 4 )
     port map ( value => display_value, output => seven_segments );
 
   process (clk, reset)
