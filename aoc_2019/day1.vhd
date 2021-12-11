@@ -66,78 +66,43 @@ entity rocket_equation is
          input : in unsigned(size-1 downto 0);
          input_valid : in std_logic;
          input_ready : buffer std_logic;
-         output : buffer unsigned(size-1 downto 0);
+         output : buffer unsigned(size-1 downto 0) := to_unsigned(0, size);
          output_valid : buffer std_logic;
          output_ready : in std_logic );
 end;
 
 architecture arch of rocket_equation is
-  signal acc : unsigned(input'range) := to_unsigned(0, input'length);
-  signal mass : unsigned(input'range);
+  signal acc, mass : unsigned(input'range) := to_unsigned(0, input'length);
+  signal have_data : boolean := false;
+
+  signal next_mass : unsigned(input'range);
+  signal output_txn, input_txn : boolean;
 begin
-  mass <= input when acc = 0 else acc;
-  output <= fuel_for(mass);
-  output_valid <= input_valid when acc = 0 else '1';
-  input_ready <= output_ready when acc = 0 else '0';
+  input_txn <= input_ready = '1' and input_valid = '1';
+  output_txn <= output_ready = '1' and output_valid = '1';
+
+  next_mass <= fuel_for(input) when input_txn else fuel_for(mass);
+  output <= next_mass when input_txn else acc + next_mass;
+
+  input_ready <= '1' when fuel_for(fuel_for(mass)) = 0 and (output_ready = '1') else '0';
+  output_valid <= '1' when fuel_for(next_mass) = 0 and (have_data or input_valid = '1') else '0';
 
   process (clk, reset)
   begin
     if reset = '1' then
       acc <= to_unsigned(0, acc'length);
+      mass <= to_unsigned(0, mass'length);
     elsif rising_edge(clk) then
-      if acc /= 0 then
-        acc <= output;
-      elsif input_ready and input_valid then
-        acc <= output;
+      mass <= next_mass;
+      acc <= output;
+
+      if input_txn and not output_txn then
+        have_data <= true;
+      elsif output_txn and not input_txn then
+        have_data <= false;
       end if;
     end if;
   end process;
-end;
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
-use work.util.all;
-
-entity fuel_counter_upper is
-  generic ( size : positive );
-  port ( clk : in std_logic;
-         reset : in std_logic := '0';
-         part : in positive range 1 to 2 := 1;
-         input : in unsigned(size-1 downto 0);
-         input_valid : in std_logic;
-         input_ready : buffer std_logic;
-         output : buffer unsigned(size-1 downto 0);
-         output_valid : buffer std_logic;
-         output_ready : in std_logic );
-end;
-
-architecture arch of fuel_counter_upper is
-  signal ready_0, valid_1, ready_1, valid_2 : std_logic;
-  signal value_1, value_2 : unsigned(input'range);
-begin
-  with part select input_ready <=
-    ready_1 when 1,
-    ready_0 when 2;
-
-  rocket_equation : entity work.rocket_equation generic map ( size => size )
-    port map ( clk => clk, reset => reset,
-               input => input, input_valid => input_valid, input_ready => ready_0,
-               output => value_1, output_valid => valid_1, output_ready => ready_1 );
-
-  with part select valid_2 <=
-    input_valid when 1,
-    valid_1 when 2;
-
-  with part select value_2 <=
-    fuel_for(input) when 1,
-    value_1 when 2;
-
-  counter_upper : entity work.counter_upper generic map ( size => size )
-    port map ( clk => clk, reset => reset,
-               input => value_2, input_valid => valid_2, input_ready => ready_1,
-               output => output, output_valid => output_valid, output_ready => output_ready );
 end;
 
 library ieee;
@@ -181,6 +146,59 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.util.all;
+
+entity fuel_counter_upper is
+  generic ( size : positive;
+            n : positive );
+  port ( clk : in std_logic;
+         reset : in std_logic := '0';
+         part : in positive range 1 to 2 := 1;
+         input : in unsigned(size-1 downto 0);
+         input_valid : in std_logic;
+         input_ready : buffer std_logic;
+         output : buffer unsigned(size-1 downto 0);
+         output_valid : buffer std_logic;
+         output_ready : in std_logic );
+end;
+
+architecture arch of fuel_counter_upper is
+  signal ready_0, valid_1, ready_1, valid_2, ready_2, valid_3 : std_logic;
+  signal value_1, value_2 : unsigned(input'range);
+begin
+  with part select input_ready <=
+    ready_1 when 1,
+    ready_0 when 2;
+
+  with part select valid_2 <=
+    input_valid when 1,
+    valid_1 when 2;
+
+  with part select value_2 <=
+    fuel_for(input) when 1,
+    value_1 when 2;
+
+  rocket_equation : entity work.rocket_equation generic map ( size => size )
+    port map ( clk => clk, reset => reset,
+               input => input, input_valid => input_valid, input_ready => ready_0,
+               output => value_1, output_valid => valid_1, output_ready => ready_1 );
+
+  counter_upper : entity work.counter_upper generic map ( size => size )
+    port map ( clk => clk, reset => reset,
+               input => value_2, input_valid => valid_2, input_ready => ready_1,
+               output => output, output_valid => valid_3, output_ready => ready_2 );
+
+  -- No marker for the last element, so we need to count
+  nth : entity work.nth generic map ( n => n )
+    port map ( clk => clk, reset => reset,
+               input_valid => valid_3, input_ready => ready_2,
+               output_valid => output_valid, output_ready => output_ready );
+end;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 library uart;
 library int_io;
 library bcd;
@@ -201,13 +219,13 @@ architecture arch of day1 is
   signal uart_in_valid, uart_in_ready,
     uart_out_valid, uart_out_ready,
     value_valid, value_ready,
-    count_valid, count_ready,
-    result_valid, result_ready : std_logic;
+    count_valid, count_ready : std_logic;
   signal uart_in, uart_out : std_logic_vector(7 downto 0);
   signal value : decimal(5 downto 0);
   signal count_dec : decimal(6 downto 0);
   signal count : unsigned(4  * count_dec'length - 1 downto 0);
   signal done : boolean;
+  signal display_value : decimal(3 downto 0) := to_decimal(0, 4);
 begin
   uart_recv : entity uart.rx generic map ( bit_clocks => 15, stop_slack => 1 )
     port map ( rx => uart_rx, clk => clk, output => uart_in, valid => uart_in_valid, ready => uart_in_ready );
@@ -216,25 +234,30 @@ begin
                byte => uart_in, byte_valid => uart_in_valid, byte_ready => uart_in_ready,
                value => value, value_valid => value_valid, value_ready => value_ready );
 
-  counter : entity work.fuel_counter_upper generic map ( size => count'length )
-    port map ( clk => clk, reset => reset,
+  counter : entity work.fuel_counter_upper generic map ( size => count'length, n => 100 )
+    port map ( clk => clk, reset => reset, part => part,
                input => to_unsigned(value, count'length), input_valid => value_valid, input_ready => value_ready,
                output => count, output_valid => count_valid, output_ready => count_ready );
   count_dec <= to_decimal(count, count_dec'length);
 
-  -- No marker for the last element, so we need to count
-  nth : entity work.nth generic map ( n => 100 )
-    port map ( clk => clk, reset => reset,
-               input_valid => count_valid, input_ready => count_ready,
-               output_valid => result_valid, output_ready => result_ready );
-
   encoder : entity int_io.encode generic map ( value_size => count_dec'length, sep => "00001010"  )
     port map ( clk => clk, reset => reset,
-               value => count_dec, value_valid => result_valid, value_ready => result_ready,
+               value => count_dec, value_valid => count_valid, value_ready => count_ready,
                byte => uart_out, byte_valid => uart_out_valid, byte_ready => uart_out_ready );
   uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
     port map ( clk => clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
 
   display : entity work.seven_segments_dec generic map ( n => 4 )
-    port map ( value => count_dec(3 downto 0), output => seven_segments );
+    port map ( value => display_value, output => seven_segments );
+
+  process (clk, reset)
+  begin
+    if reset then
+      display_value <= to_decimal(0, 4);
+    elsif rising_edge(clk) then
+      if count_valid = '1' then
+        display_value <= count_dec(display_value'range);
+      end if;
+    end if;
+  end process;
 end;
