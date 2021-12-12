@@ -3,6 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library uart_pll;
+library uart;
 library seven_segment;
 use seven_segment.seven_segments.seven_segments;
 
@@ -20,6 +21,9 @@ end;
 
 architecture data of aoc_2019 is
   signal reset, uart_reset, uart_clk : std_logic;
+
+  signal uart_in, uart_out : std_logic_vector(7 downto 0);
+  signal uart_in_valid, uart_in_ready, uart_out_valid, uart_out_ready : std_logic;
 begin
   reset <= not reset_button;
 
@@ -36,6 +40,15 @@ begin
   reset_synchronizer : entity work.synchronizer
     port map ( clk => uart_clk, async_reset => reset, sync_reset => uart_reset );
 
+  uart_recv : entity uart.rx generic map ( bit_clocks => 15, stop_slack => 1 )
+    port map ( rx => uart_rx, clk => uart_clk, output => uart_in, valid => uart_in_valid, ready => uart_in_ready );
+
+  uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
+    port map ( clk => uart_clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
+
   day1 : entity work.day1
-    port map ( clk => uart_clk, reset => uart_reset, uart_rx => uart_rx, uart_tx => uart_tx, seven_segments => seven_segments );
+    port map ( clk => uart_clk, reset => uart_reset,
+               in_ready => uart_in_ready, in_valid => uart_in_valid, in_value => uart_in,
+               out_ready => uart_out_ready, out_valid => uart_out_valid, out_value => uart_out,
+               seven_segments => seven_segments );
 end;

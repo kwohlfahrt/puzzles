@@ -4,27 +4,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-package util is
-  function to_ascii( c : std_logic_vector(7 downto 0) ) return character;
-  function from_ascii( c : character ) return std_logic_vector;
-end package;
-
-package body util is
-  function to_ascii( c : std_logic_vector(7 downto 0) ) return character is
-  begin
-    return character'val(to_integer(unsigned(c)));
-  end function;
-
-  function from_ascii( c : character ) return std_logic_vector is
-  begin
-    return std_logic_vector(to_unsigned(character'pos(c), 8));
-  end function;
-end;
-
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-
 library day1;
 use day1.util.all;
 
@@ -48,8 +27,8 @@ use ieee.numeric_std.all;
 
 library day1;
 library uart;
-use uart.util.transmit;
-use work.util.all;
+use uart.util.to_ascii;
+use uart.util.from_ascii;
 
 entity part1 is
 end part1;
@@ -57,58 +36,55 @@ end part1;
 architecture arch of part1 is
   signal done : boolean := false;
 
-  signal clk, uart_rx : std_logic := '1';
-  signal uart_tx : std_logic;
+  signal clk, out_ready : std_logic := '1';
+  signal in_valid : std_logic := '0';
+  signal in_ready, out_valid : std_logic;
 
-  constant period : time := (1 sec) / (115200 * 15);
+  signal in_value, out_value : std_logic_vector(7 downto 0);
+
+  constant period : time := 1 ns;
 begin
   -- size is 4 * decimal digits
-  dut : entity day1.day1 port map ( clk => clk, reset => '0', uart_rx => uart_rx, uart_tx => uart_tx );
+  dut : entity day1.day1
+    port map ( clk => clk, reset => '0',
+               in_ready => in_ready, in_valid => in_valid, in_value => in_value,
+               out_ready => out_ready, out_valid => out_valid, out_value => out_value );
 
   process
     file input : text;
     variable input_line : line;
     variable char : character;
-    variable char_bits : std_logic_vector(7 downto 0);
-    constant sep : std_logic_vector(7 downto 0) := "00001010";
   begin
     file_open(input, "../day1.txt", read_mode);
 
-    wait for period;
     while not endfile(input) loop
       readline(input, input_line);
       while input_line'length > 0 loop
         read(input_line, char);
-        char_bits := from_ascii(char);
+        in_value <= from_ascii(char);
+        in_valid <= '1';
 
-        transmit(char_bits, period * 15, uart_rx);
+        wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
+        wait for period / 2;
+        in_valid <= '0';
+        wait for period * 10;
       end loop;
-      char_bits := "00001010";
-      transmit(char_bits, period * 15, uart_rx);
+      in_value <= from_ascii(LF);
+      in_valid <= '1';
+      wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
+      in_valid <= '0';
     end loop;
     wait;
   end process;
 
   process
     constant expected : string := "3302760";
-    variable out_bits, char_bits : std_logic_vector(7 downto 0);
   begin
     for i in expected'range loop
-      wait until uart_tx = '0';
-      wait for period;
+      wait until rising_edge(clk) and out_valid = '1' and out_ready = '1';
 
-      char_bits := from_ascii(expected(i));
-      out_bits := "00000000";
-      assert uart_tx = '0';
-      wait for period * 15;
-      for j in char_bits'reverse_range loop
-	out_bits :=  uart_tx & out_bits(7 downto 1);
-        wait for period * 15;
-      end loop;
-      assert out_bits = char_bits
-        report to_ascii(out_bits) & " /= " & expected(i) & " @ " & to_string(i);
-      assert uart_tx = '1';
-      wait for period;
+      assert out_value = from_ascii(expected(i))
+        report to_ascii(out_value) & " /= " & expected(i) & " @ " & to_string(i);
     end loop;
     report "end of test";
     done <= true;
@@ -220,7 +196,8 @@ use ieee.numeric_std.all;
 library day1;
 library uart;
 use uart.util.transmit;
-use work.util.all;
+use uart.util.to_ascii;
+use uart.util.from_ascii;
 
 entity part2 is
 end part2;
@@ -228,58 +205,56 @@ end part2;
 architecture arch of part2 is
   signal done : boolean := false;
 
-  signal clk, uart_rx : std_logic := '1';
-  signal uart_tx : std_logic;
+  signal clk, out_ready : std_logic := '1';
+  signal in_valid : std_logic := '0';
+  signal in_ready, out_valid : std_logic;
 
-  constant period : time := (1 sec) / (115200 * 15);
+  signal in_value, out_value : std_logic_vector(7 downto 0);
+
+  constant period : time := 1 ns;
 begin
-  -- size is 4 * decimal digits
   dut : entity day1.day1
-    port map ( clk => clk, reset => '0', part => 2, uart_rx => uart_rx, uart_tx => uart_tx );
+    port map ( clk => clk, reset => '0', part => 2,
+               in_ready => in_ready, in_valid => in_valid, in_value => in_value,
+               out_ready => out_ready, out_valid => out_valid, out_value => out_value );
 
   process
     file input : text;
     variable input_line : line;
     variable char : character;
-    variable char_bits : std_logic_vector(7 downto 0);
-    constant sep : std_logic_vector(7 downto 0) := "00001010";
   begin
     file_open(input, "../day1.txt", read_mode);
 
-    wait for period;
     while not endfile(input) loop
       readline(input, input_line);
       while input_line'length > 0 loop
         read(input_line, char);
-        char_bits := from_ascii(char);
+        in_value <= from_ascii(char);
+        in_valid <= '1';
 
-        transmit(char_bits, period * 15, uart_rx);
+        wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
+        wait for period / 2;
+        in_valid <= '0';
+        -- FIXME: Correctly signal ready
+        -- In practice, we have >> 15 clocks delay, for each UART bit
+        wait for period * 10;
       end loop;
-      char_bits := "00001010";
-      transmit(char_bits, period * 15, uart_rx);
+      in_value <= from_ascii(LF);
+      in_valid <= '1';
+      wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
+      in_valid <= '0';
     end loop;
     wait;
   end process;
 
   process
     constant expected : string := "4951265";
-    variable out_bits, char_bits : std_logic_vector(7 downto 0);
   begin
     for i in expected'range loop
-      wait until uart_tx = '0';
-      wait for period;
+      wait until rising_edge(clk) and out_valid = '1' and out_ready = '1';
 
-      char_bits := from_ascii(expected(i));
-      assert uart_tx = '0';
-      wait for period * 15;
-      for j in char_bits'reverse_range loop
-	out_bits :=  uart_tx & out_bits(7 downto 1);
-        wait for period * 15;
-      end loop;
-      assert out_bits = char_bits
-        report to_ascii(out_bits) & " /= " & expected(i) & " @ " & to_string(i);
-      assert uart_tx = '1';
-      wait for period;
+      assert out_value = from_ascii(expected(i))
+        report to_ascii(out_value) & " /= " & expected(i) & " @ " & to_string(i);
     end loop;
     report "end of test";
     done <= true;
