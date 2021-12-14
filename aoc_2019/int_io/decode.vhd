@@ -1,5 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
+
+package util is
+  type seps_t is array (natural range <>) of std_logic_vector(7 downto 0);
+end package;
+
+library ieee;
+use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library bcd;
@@ -8,7 +15,7 @@ use bcd.bcd.all;
 entity decode is
   generic ( value_size : positive;
             -- ASCII ','
-            sep : unsigned(7 downto 0) := "00101100" );
+            seps : work.util.seps_t );
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          byte : in std_logic_vector(7 downto 0);
@@ -20,15 +27,25 @@ entity decode is
 end entity;
 
 architecture structure of decode is
+  type is_seps_t is array (seps'range) of boolean;
+
   signal acc : decimal(value'range) := (others => "0000");
-  signal byte_value : unsigned(byte'range);
   signal new_value, still_valid : boolean := false;
+  signal byte_value : unsigned(byte'range);
+  signal is_seps : is_seps_t;
 
   -- ASCII '0'
   constant offset : unsigned(byte'range) := "00110000";
 begin
   byte_value <= unsigned(byte);
   value_valid <= '1' when new_value or still_valid else '0';
+  gen_is_seps : for i in is_seps'range generate
+    initial_sep : if i = 0 generate
+      is_seps(i) <= byte = seps(i);
+    else generate
+      is_seps(i) <= byte = seps(i) or is_seps(i - 1);
+    end generate;
+  end generate;
 
   process (clk, reset)
   begin
@@ -46,7 +63,7 @@ begin
 
       new_value <= false;
       if byte_valid = '1' then
-        if byte_value = sep then
+        if is_seps(is_seps'right) then
           value <= acc;
           acc <= (others => "0000");
           new_value <= true;
