@@ -218,8 +218,6 @@ entity day1 is
 end;
 
 architecture arch of day1 is
-  signal display_value : decimal(3 downto 0) := to_decimal(0, 4);
-
   signal value_valid, value_ready, count_valid, count_ready : std_logic;
   signal value : decimal(5 downto 0);
   signal count_dec : decimal(6 downto 0);
@@ -240,15 +238,4 @@ begin
     port map ( clk => clk, reset => reset,
                value => count_dec, value_valid => count_valid, value_ready => count_ready,
                byte => out_value, byte_valid => out_valid, byte_ready => out_ready );
-
-  process (clk, reset)
-  begin
-    if reset then
-      display_value <= to_decimal(0, 4);
-    elsif rising_edge(clk) then
-      if count_valid = '1' then
-        display_value <= count_dec(display_value'range);
-      end if;
-    end if;
-  end process;
 end;

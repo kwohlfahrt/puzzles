@@ -1,13 +1,10 @@
 library ieee;
 
 package util is
-  -- pragma translate_off
   function log2( x : in natural ) return natural;
-  -- pragma translate_on
 end package;
 
 package body util is
-  -- pragma translate_off
   function log2( x : in natural ) return natural is
     variable v : natural := x;
     variable i : natural := 0;
@@ -18,7 +15,6 @@ package body util is
     end loop;
     return i;
   end;
-  -- pragma translate_on
 end;
 
 
