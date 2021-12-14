@@ -1,21 +1,17 @@
 library ieee;
 use ieee.std_logic_1164.all;
-
-package util is
-  type seps_t is array (natural range <>) of std_logic_vector(7 downto 0);
-end package;
-
-library ieee;
-use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library bcd;
 use bcd.bcd.all;
 
+use work.util.from_ascii;
+use work.util.seps_t;
+
 entity decode is
   generic ( value_size : positive;
             -- ASCII ','
-            seps : work.util.seps_t );
+            seps : seps_t := (0 => from_ascii(',')) );
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          byte : in std_logic_vector(7 downto 0);

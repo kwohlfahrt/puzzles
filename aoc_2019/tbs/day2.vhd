@@ -8,9 +8,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library day2;
-library uart;
-use uart.util.to_ascii;
-use uart.util.from_ascii;
+library int_io;
+use int_io.util.to_ascii;
+use int_io.util.from_ascii;
 
 entity example1 is
 end example1;
@@ -82,9 +82,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library day2;
-library uart;
-use uart.util.to_ascii;
-use uart.util.from_ascii;
+library int_io;
+use int_io.util.to_ascii;
+use int_io.util.from_ascii;
 
 entity part1 is
 end part1;
@@ -131,9 +131,14 @@ begin
   end process;
 
   process
+    constant expected : string := "3765464";
   begin
-    wait until rising_edge(clk) and out_valid = '1';
-    report to_string(out_value);
+    for i in expected'range loop
+      wait until rising_edge(clk) and out_valid = '1' and out_ready = '1';
+
+      assert out_value = from_ascii(expected(i))
+        report to_ascii(out_value) & " /= " & expected(i) & " @ " & to_string(i);
+    end loop;
     report "end of test";
     done <= true;
     wait;

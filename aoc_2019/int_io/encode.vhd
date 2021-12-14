@@ -8,7 +8,7 @@ use bcd.bcd.all;
 entity encode is
   generic ( value_size : positive;
             -- ASCII ','
-            sep : unsigned(7 downto 0) := "00101100" );
+            sep : std_logic_vector(7 downto 0) := "00101100" );
   port ( clk : in std_logic;
          reset : in std_logic := '0';
          value : in decimal(value_size - 1 downto 0);
@@ -27,7 +27,7 @@ architecture structure of encode is
   -- ASCII '0'
   constant offset : unsigned(byte'range) := "00110000";
 begin
-  byte <= std_logic_vector(acc(acc'left) + offset) when ndigits > 0 else std_logic_vector(sep);
+  byte <= std_logic_vector(acc(acc'left) + offset) when ndigits > 0 else sep;
   byte_valid <= '1' when new_byte or still_valid else '0';
   value_ready <= '1' when ndigits = 0 else '0';
 

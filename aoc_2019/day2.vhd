@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 library uart;
 library int_io;
+use int_io.util.from_ascii;
 library ram;
 use ram.util.log2;
 
@@ -11,7 +12,6 @@ library bcd;
 use bcd.bcd.all;
 
 library uart;
-use uart.util.from_ascii;
 
 library seven_segment;
 use seven_segment.seven_segments.seven_segments;
@@ -25,8 +25,7 @@ entity day2 is
          in_valid : in std_logic;
          out_value : out std_logic_vector(7 downto 0) := (others => '0');
          out_ready : in std_logic;
-         out_valid : out std_logic;
-         seven_segments : out seven_segments(3 downto 0) );
+         out_valid : out std_logic );
 end;
 
 architecture arch of day2 is
@@ -43,13 +42,12 @@ architecture arch of day2 is
 
   constant fixups : fixups_t := (12, 2);
 
-  signal display_value : decimal(3 downto 0) := to_decimal(0, 4);
   signal input_addr, pc : addr_t := to_unsigned(0, addr_size);
   signal step : step_t := 0;
   signal current_mode : mode := programming;
   signal done_programming, done_halt : boolean := false;
 
-  signal value_valid, count_valid, count_ready, write_enable, retire : std_logic;
+  signal value_valid, count_valid, count_ready, write_enable, encode_ready, encode_valid, retire : std_logic;
   signal value : decimal(5 downto 0);
   signal read_addr, output_addr, op_addr : addr_t;
   signal data_in, data_out, output, opcode, op1, op2 : data_t;
@@ -89,7 +87,7 @@ begin
     to_unsigned(0, addr_t'length) when halt,
     (others => '-') when others;
 
-  out_valid <= '1' when current_mode = halt else '0';
+  encode_valid <= '1' when current_mode = halt and not done_halt else '0';
 
   decoder : entity int_io.decode generic map ( value_size => value'length, seps => (from_ascii(','), from_ascii(LF)) )
     port map ( clk => clk, reset => reset,
@@ -100,6 +98,11 @@ begin
     port map ( clk => clk,
                write_enable => write_enable, write_addr => input_addr, data_in => data_in,
                data_out => data_out, read_addr => read_addr );
+
+  encoder : entity int_io.encode generic map ( value_size => 8, sep => from_ascii(LF) )
+    port map ( clk => clk, reset => reset,
+               value => to_decimal(data_out, 8), value_valid => encode_valid, value_ready => encode_ready,
+               byte => out_value, byte_valid => out_valid, byte_ready => out_ready );
 
   process (clk, reset)
   begin
@@ -167,7 +170,9 @@ begin
             when others =>
           end case;
         when halt =>
-          -- no-op
+          if encode_ready = '1' and encode_valid = '1'then
+            done_halt <= true;
+          end if;
       end case;
     end if;
   end process;

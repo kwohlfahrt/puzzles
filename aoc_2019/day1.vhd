@@ -200,11 +200,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library int_io;
+use int_io.util.from_ascii;
 library bcd;
 library seven_segment;
 use bcd.bcd.all;
 library uart;
-use uart.util.from_ascii;
 
 use seven_segment.seven_segments.seven_segments;
 
@@ -229,7 +229,7 @@ architecture arch of day1 is
   signal count_dec : decimal(6 downto 0);
   signal count : unsigned(4  * count_dec'length - 1 downto 0);
 begin
-  decoder : entity int_io.decode generic map ( value_size => value'length, sep => unsigned(from_ascii(LF)) )
+  decoder : entity int_io.decode generic map ( value_size => value'length, seps => (0 => from_ascii(LF)) )
     port map ( clk => clk, reset => reset,
                byte => in_value, byte_valid => in_valid, byte_ready => in_ready,
                value => value, value_valid => value_valid, value_ready => value_ready );
@@ -240,7 +240,7 @@ begin
                output => count, output_valid => count_valid, output_ready => count_ready );
   count_dec <= to_decimal(count, count_dec'length);
 
-  encoder : entity int_io.encode generic map ( value_size => count_dec'length, sep => unsigned(from_ascii(LF)) )
+  encoder : entity int_io.encode generic map ( value_size => count_dec'length, sep => from_ascii(LF) )
     port map ( clk => clk, reset => reset,
                value => count_dec, value_valid => count_valid, value_ready => count_ready,
                byte => out_value, byte_valid => out_valid, byte_ready => out_ready );

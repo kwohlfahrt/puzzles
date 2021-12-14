@@ -25,10 +25,6 @@ if { !([info exists HEADLESS] && !$HEADLESS) } {
     radix -unsigned
     add wave -group example1 sim:/example1/*
     add wave -group part1 sim:/part1/*
-    add wave sim:/part1/dut/current_mode
-    add wave sim:/part1/dut/write_enable
-    add wave sim:/part1/dut/data_in
-    add wave sim:/part1/dut/memory/data
 }
 
 run -all

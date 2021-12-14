@@ -27,8 +27,9 @@ use ieee.numeric_std.all;
 
 library day1;
 library uart;
-use uart.util.to_ascii;
-use uart.util.from_ascii;
+library int_io;
+use int_io.util.to_ascii;
+use int_io.util.from_ascii;
 
 entity part1 is
 end part1;
@@ -196,8 +197,9 @@ use ieee.numeric_std.all;
 library day1;
 library uart;
 use uart.util.transmit;
-use uart.util.to_ascii;
-use uart.util.from_ascii;
+library int_io;
+use int_io.util.to_ascii;
+use int_io.util.from_ascii;
 
 entity part2 is
 end part2;
