@@ -33,27 +33,33 @@ begin
                out_ready => out_ready, out_valid => out_valid, out_value => out_value );
 
   process
-    constant input : string := "1,9,10,3,2,3,11,0,99,30,40,50";
+    -- FIXME: Remove trailing ,0 once decoder is fixed
+    constant input : string := "1,9,10,3,2,3,11,0,99,30,40,50,0";
   begin
     for i in input'range loop
       in_value <= from_ascii(input(i));
       in_valid <= '1';
 
       wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
-      wait for period / 2;
-      in_valid <= '0';
-      wait for period * 10;
     end loop;
     in_value <= from_ascii(LF);
     in_valid <= '1';
     wait until rising_edge(clk) and in_valid = '1' and in_ready = '1';
-    wait for period / 2;
     in_valid <= '0';
     wait;
   end process;
 
   process
+    type expected_t is array (0 to 11) of integer;
+    constant expected : expected_t := ( 3500, 9, 10, 70, 2, 3, 11, 0, 99, 30, 40, 50 );
+
+    type ram_t is array (0 to 191) of unsigned(15 downto 0);
+    alias ram is << signal .example1.dut.memory.data : ram_t >>;
   begin
+    wait until rising_edge(clk) and out_valid = '1';
+    for i in expected'range loop
+      assert expected(i) = to_integer(ram(i));
+    end loop;
     report "end of test";
     done <= true;
     wait;
