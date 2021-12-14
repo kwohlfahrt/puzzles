@@ -108,6 +108,11 @@ begin
   begin
     if reset then
       input_addr <= to_unsigned(0, input_addr'length);
+      pc <= to_unsigned(0, pc'length);
+      step <= 0;
+      current_mode <= programming;
+      done_programming <= false;
+      done_halt <= false;
     elsif rising_edge(clk) then
       case current_mode is
         when programming =>

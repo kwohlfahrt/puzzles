@@ -14,7 +14,7 @@ vlib seven_segment
 vcom -2008 -work seven_segment {../seven-segment.vhd}
 
 vlib aoc_2019_tb
-vcom -2008 -work aoc_2019_tb {../reset.vhd} {../day1.vhd} {../aoc_2019.vhd} {../tbs/aoc_2019.vhd}
+vcom -2008 -work aoc_2019_tb {../reset.vhd} {../day1.vhd} {../day2.vhd} {../aoc_2019.vhd} {../tbs/aoc_2019.vhd}
 
 vsim -L altera_lnsim -L cyclonev -voptargs="+acc" aoc_2019_tb.tb1
 

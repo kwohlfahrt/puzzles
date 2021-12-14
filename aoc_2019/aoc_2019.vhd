@@ -22,10 +22,15 @@ end;
 architecture data of aoc_2019 is
   signal reset, uart_reset, uart_clk : std_logic;
 
-  signal uart_in, uart_out : std_logic_vector(7 downto 0);
-  signal uart_in_valid, uart_in_ready, uart_out_valid, uart_out_ready : std_logic;
+  signal uart_in, uart_out, day1_out, day2_out : std_logic_vector(7 downto 0);
+  signal uart_in_valid, uart_in_ready, uart_out_valid, uart_out_ready,
+    day1_in_ready, day1_out_valid,
+    day2_in_ready, day2_out_valid : std_logic;
+  signal day1_seven_segments : seven_segments'subtype;
+  signal day : positive;
 begin
   reset <= not reset_button;
+  day <= to_integer(unsigned(switches));
 
   gen_switch_led : for i in switches'range generate
     leds_red(i) <= switches(i);
@@ -46,9 +51,33 @@ begin
   uart_trans : entity uart.tx generic map ( bit_clocks => 15, stop_slack => 1 )
     port map ( clk => uart_clk, tx => uart_tx, input => uart_out, valid => uart_out_valid, ready => uart_out_ready );
 
+  with day select uart_in_ready <=
+    day1_in_ready when 1,
+    day2_in_ready when 2,
+    '-' when others;
+
+  with day select uart_out_valid <=
+    day1_out_valid when 1,
+    day2_out_valid when 2,
+    '-' when others;
+
+  with day select uart_out <=
+    day1_out when 1,
+    day2_out when 2,
+    (others => '-') when others;
+
+  with day select seven_segments <=
+    day1_seven_segments when 1,
+    (others => (others => '0')) when others;
+
   day1 : entity work.day1
     port map ( clk => uart_clk, reset => uart_reset,
-               in_ready => uart_in_ready, in_valid => uart_in_valid, in_value => uart_in,
-               out_ready => uart_out_ready, out_valid => uart_out_valid, out_value => uart_out,
-               seven_segments => seven_segments );
+               in_ready => day1_in_ready, in_valid => uart_in_valid, in_value => uart_in,
+               out_ready => uart_out_ready, out_valid => day1_out_valid, out_value => day1_out,
+               seven_segments => day1_seven_segments );
+
+  day2 : entity work.day2
+    port map ( clk => uart_clk, reset => uart_reset,
+               in_ready => day2_in_ready, in_valid => uart_in_valid, in_value => uart_in,
+               out_ready => uart_out_ready, out_valid => day2_out_valid, out_value => day2_out );
 end;
