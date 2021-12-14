@@ -19,11 +19,12 @@ vcom -2008 -work day2 {../day2.vhd}
 vlib day2_tb
 vcom -2008 -work day2_tb {../tbs/day2.vhd}
 
-vsim -voptargs="+acc" day2_tb.example1
+vsim -voptargs="+acc" day2_tb.example1 day2_tb.part1
 
 if { !([info exists HEADLESS] && !$HEADLESS) } {
     radix -unsigned
     add wave -group example1 sim:/example1/*
+    add wave -group part1 sim:/part1/*
 }
 
 run -all
