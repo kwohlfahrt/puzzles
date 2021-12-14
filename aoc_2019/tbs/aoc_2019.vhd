@@ -6,7 +6,7 @@ library bcd;
 use bcd.bcd.all;
 
 library seven_segment;
-use seven_segment.seven_segments.seven_segments;
+use seven_segment.seven_segments.seven_segments_t;
 
 entity tb1 is
 end;
@@ -19,7 +19,7 @@ architecture structure of tb1 is
   signal reset : std_logic := '0';
 
   -- output
-  signal seven_segments : seven_segments(3 downto 0);
+  signal seven_segments : seven_segments_t(3 downto 0);
   signal leds_red : std_logic_vector(0 to 9);
   signal leds_green : std_logic_vector(0 to 7);
   signal uart_tx : std_logic;

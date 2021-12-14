@@ -10,7 +10,7 @@ end;
 
 architecture structural of tb1 is
   signal input : unsigned(4 * 16 - 1 downto 0) := ( others => '0' );
-  signal output : seven_segments(15 downto 0);
+  signal output : seven_segments_t(15 downto 0);
 begin
   input <= x"fedcba9876543210";
 
@@ -42,7 +42,7 @@ end;
 
 architecture structural of tb2 is
   signal input : decimal(0 to 9) := ( others => "0000" );
-  signal output : seven_segments(9 downto 0);
+  signal output : seven_segments_t(9 downto 0);
 begin
   input_numbers : for i in 0 to 9 generate
     input(i) <= to_unsigned(9 - i, 4);

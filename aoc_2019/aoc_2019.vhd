@@ -4,14 +4,17 @@ use ieee.numeric_std.all;
 
 library uart_pll;
 library uart;
+library bcd;
+use bcd.bcd.to_decimal;
+
 library seven_segment;
-use seven_segment.seven_segments.seven_segments;
+use seven_segment.seven_segments.seven_segments_t;
 
 entity aoc_2019 is
   port ( switches : in std_logic_vector(9 downto 0);
          buttons : in std_logic_vector(0 to 3);
          reset_button : in std_logic;
-         seven_segments : out seven_segments(3 downto 0);
+         seven_segments : out seven_segments_t(3 downto 0);
          leds_red : out std_logic_vector(0 to 9);
          leds_green : out std_logic_vector(0 to 7);
          oscillator : in std_logic;
@@ -26,7 +29,6 @@ architecture data of aoc_2019 is
   signal uart_in_valid, uart_in_ready, uart_out_valid, uart_out_ready,
     day1_in_ready, day1_out_valid,
     day2_in_ready, day2_out_valid : std_logic;
-  signal day1_seven_segments : seven_segments'subtype;
   signal day : positive;
 begin
   reset <= not reset_button;
@@ -39,6 +41,9 @@ begin
     leds_green(2 * i) <= buttons(i);
     leds_green(2 * i + 1) <= buttons(i);
   end generate;
+
+  display : entity seven_segment.seven_segments_dec generic map ( n => 4 )
+    port map ( value => to_decimal(day, seven_segments'length), output => seven_segments );
 
   uart_clk_src : entity uart_pll.uart_pll
     port map ( refclk => oscillator, rst => reset, outclk_1 => uart_clk );
@@ -66,15 +71,10 @@ begin
     day2_out when 2,
     (others => '-') when others;
 
-  with day select seven_segments <=
-    day1_seven_segments when 1,
-    (others => (others => '0')) when others;
-
   day1 : entity work.day1
     port map ( clk => uart_clk, reset => uart_reset,
                in_ready => day1_in_ready, in_valid => uart_in_valid, in_value => uart_in,
-               out_ready => uart_out_ready, out_valid => day1_out_valid, out_value => day1_out,
-               seven_segments => day1_seven_segments );
+               out_ready => uart_out_ready, out_valid => day1_out_valid, out_value => day1_out );
 
   day2 : entity work.day2
     port map ( clk => uart_clk, reset => uart_reset,

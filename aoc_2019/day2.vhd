@@ -13,9 +13,6 @@ use bcd.bcd.all;
 
 library uart;
 
-library seven_segment;
-use seven_segment.seven_segments.seven_segments;
-
 entity day2 is
   port ( clk : in std_logic;
          reset : in std_logic := '0';

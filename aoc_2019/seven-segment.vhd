@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package seven_segments is
-  type seven_segments is array (natural range <>) of std_logic_vector(0 to 6);
+  type seven_segments_t is array (natural range <>) of std_logic_vector(0 to 6);
   type hex_digits_t is array (natural range 0 to 15) of std_logic_vector(0 to 6);
   -- 7-segment displays are active-low
   constant hex_digits : hex_digits_t := (
@@ -23,7 +23,7 @@ use work.seven_segments.all;
 entity seven_segments_hex is
   generic ( n : positive );
   port ( value : in unsigned(n * 4 - 1 downto 0);
-         output : out seven_segments(n - 1 downto 0) );
+         output : out seven_segments_t(n - 1 downto 0) );
 end;
 
 architecture structural of seven_segments_hex is
@@ -46,7 +46,7 @@ use work.seven_segments.all;
 entity seven_segments_dec is
   generic ( n : positive );
   port ( value : in decimal(n - 1 downto 0);
-         output : out seven_segments(n - 1 downto 0) );
+         output : out seven_segments_t(n - 1 downto 0) );
 end;
 
 architecture structural of seven_segments_dec is

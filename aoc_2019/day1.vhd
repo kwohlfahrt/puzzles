@@ -202,11 +202,8 @@ use ieee.numeric_std.all;
 library int_io;
 use int_io.util.from_ascii;
 library bcd;
-library seven_segment;
 use bcd.bcd.all;
 library uart;
-
-use seven_segment.seven_segments.seven_segments;
 
 entity day1 is
   port ( clk : in std_logic;
@@ -217,8 +214,7 @@ entity day1 is
          in_valid : in std_logic;
          out_value : out std_logic_vector(7 downto 0);
          out_ready : in std_logic;
-         out_valid : out std_logic;
-         seven_segments : out seven_segments(3 downto 0) );
+         out_valid : out std_logic );
 end;
 
 architecture arch of day1 is
@@ -244,9 +240,6 @@ begin
     port map ( clk => clk, reset => reset,
                value => count_dec, value_valid => count_valid, value_ready => count_ready,
                byte => out_value, byte_valid => out_valid, byte_ready => out_ready );
-
-  display : entity seven_segment.seven_segments_dec generic map ( n => 4 )
-    port map ( value => display_value, output => seven_segments );
 
   process (clk, reset)
   begin
