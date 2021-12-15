@@ -7,7 +7,7 @@ The rules are simple - the day/part can be hard-coded, or set with switches,
 but the entire input must be streamed to the FPGA as downloaded.  No
 pre-processing to parse integers or translate characters is allowed.
 
-I have a [DE-10 development board][DE-10] development board to run it on, this
+I have a [Cyclone V GX Starter Kit][Kit] development board to run it on, this
 uses Intel/Altera's Cyclone V FPGA.
 
 ## Building
@@ -37,4 +37,4 @@ tee /dev/ttyUSB0 < day1.txt
 The answer should appear on the `picocom` terminal. Between inputs, reset the
 state of the FPGA with the reset button.
 
-[DE-10]: https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=167&No=1081                                                               
+[Kit]: https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&No=830
