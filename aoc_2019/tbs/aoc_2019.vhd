@@ -13,7 +13,7 @@ end;
 
 architecture structure of tb1 is
   --input
-  signal switches : std_logic_vector(9 downto 0) := "0000000001";
+  signal switches : std_logic_vector(9 downto 0) := "0000000010";
   signal buttons : std_logic_vector(0 to 3) := "0000";
   signal oscillator, uart_rx : std_logic := '1';
   signal reset : std_logic := '0';
@@ -44,6 +44,7 @@ begin
   process
     alias uart_clk is << signal .tb1.dut.uart_clk : std_logic >>;
     alias day is << signal .tb1.dut.day : positive >>;
+    alias part is << signal .tb1.dut.part : positive >>;
   begin
     wait for 500 ns;
     -- Check we've stopped after reset
@@ -61,6 +62,7 @@ begin
     end loop;
 
     assert day = 1;
+    assert part = 1;
     done <= true;
     report "end of test";
     wait;
