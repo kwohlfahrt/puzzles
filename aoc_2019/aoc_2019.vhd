@@ -36,6 +36,9 @@ begin
   day <= to_integer(unsigned(switches(9 downto 1)));
   part <= 2 when switches(0) else 1;
 
+  leds_red <= (others => '0');
+  leds_green <= (others => '0');
+
   day_display : entity seven_segment.seven_segments_dec generic map ( n => 3 )
     port map ( value => to_decimal(day, 3), output => seven_segments(3 downto 1) );
 
