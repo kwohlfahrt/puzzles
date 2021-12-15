@@ -46,7 +46,7 @@ architecture arch of day2 is
 
   signal value_valid, count_valid, count_ready, write_enable, encode_ready, encode_valid, retire : std_logic;
   signal value : decimal(5 downto 0);
-  signal read_addr, output_addr, op_addr : addr_t;
+  signal read_addr, op_addr : addr_t;
   signal data_in, data_out, output, opcode, op1, op2 : data_t;
   signal mul : unsigned(data_size*2-1 downto 0);
   signal sum : unsigned(data_size-1 downto 0);
