@@ -39,14 +39,13 @@ architecture arch of ram is
   type mem is array(0 to size-1) of unsigned(data_size-1 downto 0);
   signal data : mem;
 begin
-  data_out <= data(to_integer(read_addr));
-
   process (clk)
   begin
     if rising_edge(clk) then
       if write_enable then
         data(to_integer(write_addr)) <= data_in;
       end if;
+      data_out <= data(to_integer(read_addr));
     end if;
   end process;
 end;

@@ -34,7 +34,7 @@ architecture arch of day2 is
   subtype addr_t is unsigned(addr_size-1 downto 0);
   subtype data_t is unsigned(data_size-1 downto 0);
   -- Quartus doesn't support 'subtype attribute, so define explicitly
-  subtype step_t is natural range 0 to 3 ;
+  subtype step_t is natural range 0 to 3;
   type fixups_t is array (natural range 1 to 2) of integer;
 
   constant fixups : fixups_t := (12, 2);
@@ -46,7 +46,7 @@ architecture arch of day2 is
 
   signal value_valid, count_valid, count_ready, write_enable, encode_ready, encode_valid, retire : std_logic;
   signal value : decimal(5 downto 0);
-  signal read_addr, output_addr, op_addr : addr_t;
+  signal read_addr, op_addr : addr_t;
   signal data_in, data_out, output, opcode, op1, op2 : data_t;
   signal mul : unsigned(data_size*2-1 downto 0);
   signal sum : unsigned(data_size-1 downto 0);
@@ -74,8 +74,9 @@ begin
     '0' when others;
 
   with step select op_addr <=
-    op1(op_addr'range) when 1,
-    op2(op_addr'range) when 2,
+    op1(op_addr'range) when 0,
+    op2(op_addr'range) when 1,
+    pc when 3,
     (others => '-') when others;
 
   with current_mode select read_addr <=
@@ -84,7 +85,7 @@ begin
     to_unsigned(0, addr_t'length) when halt,
     (others => '-') when others;
 
-  encode_valid <= '1' when current_mode = halt and not done_halt else '0';
+  encode_valid <= '1' when current_mode = halt and step > 0 and not done_halt else '0';
 
   decoder : entity int_io.decode generic map ( value_size => value'length, seps => (from_ascii(','), from_ascii(LF)) )
     port map ( clk => clk, reset => reset,
@@ -121,6 +122,7 @@ begin
           if done_programming then
             if part = 0 then
               current_mode <= loading;
+              pc <= pc + 1;
             else
               current_mode <= fixup;
               input_addr <= to_unsigned(1, input_addr'length);
@@ -132,13 +134,14 @@ begin
           step <= step + 1;
           if input_addr = fixups_t'right then
             current_mode <= loading;
+            pc <= pc + 1;
             step <= 0;
           end if;
         when loading =>
-          pc <= pc + 1;
           if step = step_t'high then
             step <= 0;
           else
+            pc <= pc + 1;
             step <= step_t'succ(step);
           end if;
 
@@ -148,30 +151,31 @@ begin
             when 2 => op2 <= data_out;
             when 3 =>
               input_addr <= data_out(addr_t'range);
-              step <= 0;
               if opcode = 99 then
                 current_mode <= halt;
               else
                 current_mode <= executing;
-                step <= 1;
               end if;
           end case;
         when executing =>
           if step = step_t'high then
             step <= 0;
+            pc <= pc + 1;
           else
             step <= step_t'succ(step);
           end if;
 
           case step is
+            when 0 =>
             when 1 => op1 <= data_out;
-            when 2 =>
-              op2 <= data_out;
-            when 3 =>
-              current_mode <= loading;
-            when others =>
+            when 2 => op2 <= data_out;
+            when 3 => current_mode <= loading;
           end case;
         when halt =>
+          if step < 1 then
+            step <= step + 1;
+          end if;
+
           if encode_ready = '1' and encode_valid = '1'then
             done_halt <= true;
           end if;
