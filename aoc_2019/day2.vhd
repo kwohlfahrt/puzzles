@@ -34,7 +34,7 @@ architecture arch of day2 is
   subtype addr_t is unsigned(addr_size-1 downto 0);
   subtype data_t is unsigned(data_size-1 downto 0);
   -- Quartus doesn't support 'subtype attribute, so define explicitly
-  subtype step_t is natural range 0 to 3 ;
+  subtype step_t is natural range 0 to 4;
   type fixups_t is array (natural range 1 to 2) of integer;
 
   constant fixups : fixups_t := (12, 2);
@@ -143,12 +143,12 @@ begin
           end if;
 
           case step is
-            when 0 => opcode <= data_out;
-            when 1 => op1 <= data_out;
-            when 2 => op2 <= data_out;
-            when 3 =>
+            when 0 => -- wait for data ready on next cycle
+            when 1 => opcode <= data_out;
+            when 2 => op1 <= data_out;
+            when 3 => op2 <= data_out;
+            when 4 =>
               input_addr <= data_out(addr_t'range);
-              step <= 0;
               if opcode = 99 then
                 current_mode <= halt;
               else
@@ -164,10 +164,10 @@ begin
           end if;
 
           case step is
-            when 1 => op1 <= data_out;
-            when 2 =>
-              op2 <= data_out;
+            when 2 => op1 <= data_out;
             when 3 =>
+              op2 <= data_out;
+            when 4 =>
               current_mode <= loading;
             when others =>
           end case;
