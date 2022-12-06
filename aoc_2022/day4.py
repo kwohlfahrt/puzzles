@@ -1,6 +1,3 @@
-from pathlib import Path
-import sys
-
 class Range:
     def __init__(self, start, end):
         self.start = start
@@ -39,15 +36,3 @@ def part2(f):
         if len(a.intersection(b)) > 0:
             total += 1
     return total
-
-
-def main(argv=sys.argv):
-    _, input_name = argv
-
-    with Path(input_name).open() as f:
-        print(part1(f))
-        f.seek(0)
-        print(part2(f))
-
-if __name__ == "__main__":
-    main()

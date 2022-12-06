@@ -1,5 +1,3 @@
-from pathlib import Path
-import sys
 from dataclasses import dataclass
 from enum import Enum, auto
 
@@ -99,15 +97,3 @@ def part1(file):
 
 def part2(file):
     return sum(r.score for r in map(Round2.parse, file))
-
-
-def main(argv=sys.argv):
-    _, input_name = argv
-
-    with Path(input_name).open() as f:
-        print(part1(f))
-        f.seek(0)
-        print(part2(f))
-
-if __name__ == "__main__":
-    main()

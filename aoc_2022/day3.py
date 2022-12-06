@@ -1,6 +1,3 @@
-from pathlib import Path
-import sys
-
 def priority(c):
     if c.isupper():
         return ord(c) - ord("A") + 27
@@ -29,15 +26,3 @@ def part2(f):
         item, = set.intersection(*map(set, group))
         total += priority(item)
     return total
-
-
-def main(argv=sys.argv):
-    _, input_name = argv
-
-    with Path(input_name).open() as f:
-        print(part1(f))
-        f.seek(0)
-        print(part2(f))
-
-if __name__ == "__main__":
-    main()
