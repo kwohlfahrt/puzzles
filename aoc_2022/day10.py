@@ -1,24 +1,27 @@
 class CPU:
     def __init__(self):
-        self.cycle = 1
         self.x = 1
-        self.ready = True
+        self.state = None
 
     def run(self, lines):
         lines = map(str.strip, lines)
+
         while True:
-            self.cycle += 1
+            yield self.x
 
-            if (self.cycle - 20) % 40 == 0:
-                yield self.signal_strength
+            match self.state:
+                case None:
+                    pass
+                case ["addx", value]:
+                    self.x += value
+                    self.state = None
+                    continue
 
-            if not self.ready:
-                self.ready = True
-                continue
             try:
                 instruction = next(lines)
             except StopIteration:
                 return
+
             self.execute(instruction)
 
     def execute(self, instruction):
@@ -26,18 +29,35 @@ class CPU:
             case ["noop"]:
                 pass
             case ["addx", value]:
-                self.x += int(value)
-                self.ready = False
+                self.state = ["addx", int(value)]
 
-    @property
-    def signal_strength(self):
-        return self.x * self.cycle
+
+class CRT:
+    def __init__(self):
+        self.cpu = CPU()
+
+    def run(self, lines):
+        xs = self.cpu.run(lines)
+
+        pixels = [[" " for _ in range(40)] for _ in range(6)]
+        for j, row in enumerate(pixels):
+            for i in range(len(row)):
+                x = next(xs)
+                if abs(i - x) <= 1:
+                    pixels[j][i] = "#"
+        return "\n".join("".join(row) for row in pixels)
+
 
 
 def part1(f):
     cpu = CPU()
-    return sum(cpu.run(f))
+    signal = 0
+    for cycle, x in enumerate(cpu.run(f), start=1):
+        if (cycle - 20) % 40 == 0:
+            signal += x * cycle
+    return signal
 
 
 def part2(f):
-    ...
+    crt = CRT()
+    return crt.run(f)
