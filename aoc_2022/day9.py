@@ -26,11 +26,14 @@ class Vector:
     def norm(self):
         return max(map(abs, self))
 
+    def __repr__(self):
+        return f"Vector{repr(self.pos)}"
+
 
 class Rope:
     def __init__(self, length=1):
         self.head = Vector(0, 0)
-        self.tail = Vector(0, 0)
+        self.tails = [Vector(0, 0) for _ in range(length)]
 
     def move(self, direction, amount):
         for _ in range(amount):
@@ -43,14 +46,17 @@ class Rope:
                     self.head += Vector(0, 1)
                 case "D":
                     self.head -= Vector(0, 1)
-            delta = self.head - self.tail
-            if delta.norm() > 1:
-                self.tail += delta.clamp(-1, 1)
-                yield self.tail
+            last = self.head
+            for i, tail in enumerate(self.tails):
+                delta = last - tail
+                if delta.norm() > 1:
+                    self.tails[i] += delta.clamp(-1, 1)
+                last = self.tails[i]
+            yield last
 
     def interpret(self, line):
         direction, amount = line.strip().split()
-        yield self.tail
+        yield self.tails[-1]
         yield from self.move(direction, int(amount))
 
 
@@ -63,4 +69,8 @@ def part1(f):
 
 
 def part2(f):
-    ...
+    rope = Rope(length=9)
+    visited = set()
+    for line in f:
+        visited.update(rope.interpret(line))
+    return len(visited)
