@@ -1,12 +1,4 @@
-from itertools import tee
-
-
-def windows(iterable, n):
-    iterables = tee(iterable, n)
-    for i, iterable in enumerate(iterables):
-        for _ in range(i):
-            next(iterable)
-    yield from zip(*iterables)
+from util import windows
 
 
 def part1(f):
