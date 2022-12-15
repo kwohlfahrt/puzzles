@@ -32,3 +32,6 @@ class Vector:
 
     def __repr__(self):
         return f"Vector{repr(self.pos)}"
+
+    def __str__(self):
+        return str(self.pos)
